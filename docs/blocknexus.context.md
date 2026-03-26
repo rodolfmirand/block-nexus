@@ -1,35 +1,188 @@
 # Contexto do Projeto: BlockNexus
 
-## 1. Visão Geral do Projeto
-**BlockNexus** é uma API serverless projetada para o ecossistema de modificações (mods) do Minecraft. A aplicação atua como um analisador de compatibilidade e um motor de recomendação para modpacks.
-O objetivo é receber uma lista de mods escolhida pelo usuário, resolver a árvore de dependências, identificar conflitos conhecidos e sugerir mods complementares baseados no contexto do pacote.
+## 1. Visão Geral
 
-## 2. Foco Acadêmico (TCC em Sistemas de Informação)
-O projeto servirá como base empírica para um Trabalho de Conclusão de Curso (TCC).
-* **Tema da Pesquisa:** Análise comparativa de desempenho e complexidade entre Bancos de Dados Relacionais (SQL) e Bancos de Dados Orientados a Grafos (NoSQL) para resolução de dependências profundas e sistemas de recomendação.
-* **Experimento:** A API testará o tempo de resposta e o custo computacional ao resolver conflitos de mods usando *JOINs recursivos* no PostgreSQL versus *Navegação de Arestas* no Amazon Neptune.
+**BlockNexus** é uma API voltada ao ecossistema de mods do Minecraft, com foco inicial em análise de compatibilidade para modpacks.
 
-## 3. Stack de Tecnologias e Infraestrutura (AWS)
-A stack foi escolhida com foco em arquitetura Cloud-Native, Serverless e mitigação de *Cold Starts*.
+O objetivo do produto é receber uma seleção de mods, considerar a versão do Minecraft e o loader utilizado, e retornar uma análise estruturada com:
 
-* **Linguagem:** TypeScript (Node.js).
-* **Framework Web:** Hono (otimizado para Edge e AWS Lambda).
-* **Infraestrutura como Código (IaC):** AWS CDK (Cloud Development Kit).
-* **Computação e Roteamento:** AWS Lambda + Amazon API Gateway.
-* **Banco de Dados (Sessão/Cache):** Redis (Upstash para dev local / Amazon ElastiCache para produção).
-* **Banco de Dados (Motor de Grafos):** Amazon Neptune (consultado via Apache TinkerPop / linguagem Gremlin).
-* **Banco de Dados (Baseline Relacional para o TCC):** Amazon RDS (PostgreSQL).
-* **Monitoramento e Métricas:** Amazon CloudWatch (para extrair os dados de latência para o TCC).
+- dependências faltantes;
+- dependências resolvidas;
+- conflitos conhecidos;
+- incompatibilidades de versão;
+- avisos relevantes para montagem do modpack.
 
-## 4. Arquitetura de Autenticação (Stateless / Frictionless)
-Para reduzir a barreira de entrada e simplificar a conformidade com a LGPD, a API não possui sistema tradicional de criação de contas de usuário.
-* O fluxo é baseado em sessões temporárias e anônimas.
-* **Mecanismo:** O usuário inicia a sessão, a API gera um `UUID` e assina um JWT (JSON Web Token) anônimo. O front-end armazena esse token.
-* **Estado:** O "carrinho" de mods do usuário é salvo no Redis utilizando o UUID como chave, configurado com um TTL (Time-To-Live) de 24 horas para autodestruição.
+Nesta fase inicial, o BlockNexus deve ser tratado primeiro como **produto utilizável**. A exploração acadêmica para o TCC virá depois, apoiada sobre uma base funcional real.
 
-## 5. Estrutura e Configuração do Repositório
-* **Licença:** MIT License (permissiva, ideal para portfólio open-source).
-* **Controle de Versão:** `.gitignore` configurado estritamente para ignorar `node_modules`, builds do TypeScript (`dist/`), arquivos gerados pelo AWS CDK (`cdk.out/`) e, fundamentalmente, variáveis de ambiente secretas (`.env`).
+---
 
-## 6. Próximo Passo de Desenvolvimento
-A infraestrutura base do Hono (`npm create hono@latest` usando o template `aws-lambda`) já foi inicializada. O próximo passo de código é definir a arquitetura de pastas e criar o endpoint `POST /session/start` para gerar o UUID da sessão e interagir com o Redis.
+## 2. Estratégia do Projeto
+
+O projeto seguirá duas etapas principais:
+
+1. **Construção do produto**
+2. **Evolução para base experimental do TCC**
+
+Isso significa que as decisões técnicas do início devem priorizar:
+
+- velocidade de execução;
+- clareza de domínio;
+- simplicidade operacional;
+- capacidade de validar o caso de uso central.
+
+Por esse motivo, o projeto não começa por autenticação, recomendação avançada, Redis ou banco de grafos. Ele começa por **dados confiáveis, modelo de domínio e análise de compatibilidade**.
+
+---
+
+## 3. Escopo do MVP
+
+O primeiro produto utilizável do BlockNexus deve resolver um caso central:
+
+**analisar a compatibilidade de uma seleção de mods para um modpack específico**.
+
+### Entrada esperada no MVP
+
+- versão do Minecraft;
+- loader;
+- lista de mods ou versões de mods.
+
+### Saída esperada no MVP
+
+- dependências faltantes;
+- dependências resolvidas;
+- conflitos identificados;
+- incompatibilidades de versão;
+- resumo final da análise.
+
+### Fora do escopo inicial
+
+Os itens abaixo são importantes, mas não pertencem à primeira entrega do produto:
+
+- sistema de contas;
+- autenticação avançada;
+- sessões persistentes de usuário;
+- cache distribuído;
+- recomendação sofisticada de mods;
+- comparação entre bancos para fins acadêmicos;
+- infraestrutura AWS completa desde o primeiro ciclo.
+
+---
+
+## 4. Direção Técnica Inicial
+
+Para a primeira versão, o projeto seguirá esta direção:
+
+- **Linguagem:** TypeScript
+- **Runtime:** Node.js
+- **Framework HTTP:** Hono
+- **Banco inicial:** PostgreSQL
+- **Objetivo da API inicial:** expor um backend simples e testável com `GET /health` e, depois, `POST /analyze`
+
+### Motivo da escolha
+
+O PostgreSQL será usado como base inicial porque reduz a complexidade da primeira implementação, acelera a entrega do MVP e permite que o domínio amadureça antes da criação da variante em banco de grafos.
+
+O uso de Amazon Neptune, Redis, API Gateway e Lambda continua relevante como direção futura, mas não é a prioridade da primeira fase do produto.
+
+---
+
+## 5. Eixos Técnicos Prioritários
+
+As próximas decisões do projeto devem se concentrar em quatro eixos:
+
+### 5.1 Fonte de Dados
+
+O primeiro problema real do produto é definir de onde virão os dados dos mods.
+
+Sem uma fonte de dados confiável para dependências, conflitos, loaders e compatibilidade por versão, não existe análise consistente.
+
+### 5.2 Modelo de Domínio
+
+O domínio mínimo esperado para o produto inclui:
+
+- `Mod`
+- `ModVersion`
+- `Dependency`
+- `Conflict`
+- `LoaderSupport`
+- `MinecraftVersionSupport`
+
+Essas entidades devem ser definidas de forma independente da tecnologia de persistência.
+
+### 5.3 Motor de Análise
+
+O núcleo do produto será um serviço responsável por:
+
+- resolver dependências transitivas;
+- detectar conflitos explícitos;
+- apontar incompatibilidades por loader e versão;
+- produzir uma resposta explicável e utilizável.
+
+### 5.4 API do Produto
+
+Depois da base de dados e do domínio, a prioridade é expor o fluxo principal do produto:
+
+- `GET /health`
+- `POST /analyze`
+
+Esse fluxo tem prioridade maior do que endpoints de sessão ou persistência do usuário.
+
+---
+
+## 6. Relação com o TCC
+
+O BlockNexus também servirá como base empírica para um TCC em Sistemas de Informação.
+
+O uso acadêmico previsto é uma **comparação entre abordagem relacional e abordagem orientada a grafos** para operações centrais do domínio, principalmente:
+
+- resolução de dependências profundas;
+- detecção de conflitos;
+- consultas com filtros por versão e loader.
+
+### Importante
+
+O TCC não deve dirigir as primeiras decisões do produto.
+
+A ordem correta é:
+
+1. construir o produto;
+2. estabilizar o domínio e a regra de negócio;
+3. instrumentar e formalizar o experimento;
+4. implementar a variante em banco de grafos para comparação.
+
+---
+
+## 7. Estado Atual do Repositório
+
+Neste momento, o repositório está em fase inicial de estruturação.
+
+O que já existe:
+
+- licença MIT;
+- `.gitignore`;
+- documentação de contexto e roadmap.
+
+O que foi estruturado na Fase 0:
+
+- `package.json`;
+- estrutura inicial do backend;
+- configuração de TypeScript;
+- configuração de lint e formatação;
+- `README.md` operacional;
+- endpoint `GET /health`.
+
+---
+
+## 8. Próximo Passo Imediato
+
+Com a **Fase 0** implementada, o próximo passo de desenvolvimento é iniciar a **Fase 1**, com foco em:
+
+1. escolher a fonte primária de dados dos mods;
+2. definir o contrato canônico de ingestão;
+3. mapear dependências, conflitos, loaders e compatibilidade por versão;
+4. preparar a persistência inicial do catálogo;
+5. abrir caminho para a modelagem formal do domínio.
+
+Em resumo:
+
+**o BlockNexus já saiu do estado puramente conceitual; a prioridade agora é transformar dados de mods em um modelo confiável para sustentar o futuro `POST /analyze`**.
