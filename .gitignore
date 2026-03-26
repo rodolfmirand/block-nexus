@@ -1,0 +1,48 @@
+# =========================
+# BlockNexus - .gitignore
+# Stack: Node.js, TypeScript, Hono, AWS
+# =========================
+
+# Node Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Typescript Build Artifacts
+dist/
+build/
+out/
+.tscache/
+
+# Local Environment Variables 
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+
+# AWS CDK e SAM
+cdk.out/
+.serverless/
+.aws-sam/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# Logs
+logs/
+*.log
+
+# Documentation
+docs/
