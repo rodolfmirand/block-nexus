@@ -92,9 +92,17 @@ As próximas decisões do projeto devem se concentrar em quatro eixos:
 
 ### 5.1 Fonte de Dados
 
-O primeiro problema real do produto é definir de onde virão os dados dos mods.
+A fonte primária inicial do catálogo foi definida como **Modrinth**.
 
-Sem uma fonte de dados confiável para dependências, conflitos, loaders e compatibilidade por versão, não existe análise consistente.
+O projeto já possui:
+
+- decisão de fonte documentada;
+- contrato canônico de ingestão;
+- adapter inicial source-agnostic;
+- pipeline para geração de snapshot local do catálogo;
+- política inicial de atualização por snapshot controlado.
+
+Sem essa normalização, não existe análise consistente de dependências, conflitos, loaders e compatibilidade por versão.
 
 ### 5.2 Modelo de Domínio
 
@@ -154,13 +162,7 @@ A ordem correta é:
 
 ## 7. Estado Atual do Repositório
 
-Neste momento, o repositório está em fase inicial de estruturação.
-
-O que já existe:
-
-- licença MIT;
-- `.gitignore`;
-- documentação de contexto e roadmap.
+Neste momento, o repositório saiu do bootstrap inicial e já possui uma base operacional para ingestão de dados.
 
 O que foi estruturado na Fase 0:
 
@@ -171,18 +173,25 @@ O que foi estruturado na Fase 0:
 - `README.md` operacional;
 - endpoint `GET /health`.
 
+O que foi estruturado na Fase 1:
+
+- decisão de fonte primária de dados;
+- contrato canônico de ingestão;
+- adapter inicial do Modrinth;
+- pipeline inicial para gerar snapshot local do catálogo;
+- estratégia documentada de atualização do catálogo.
+
 ---
 
 ## 8. Próximo Passo Imediato
 
-Com a **Fase 0** implementada, o próximo passo de desenvolvimento é iniciar a **Fase 1**, com foco em:
+Com a base da **Fase 1** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 2**, com foco em:
 
-1. escolher a fonte primária de dados dos mods;
-2. definir o contrato canônico de ingestão;
-3. mapear dependências, conflitos, loaders e compatibilidade por versão;
-4. preparar a persistência inicial do catálogo;
-5. abrir caminho para a modelagem formal do domínio.
+1. formalizar entidades centrais do domínio;
+2. definir regras de dependência, conflito e incompatibilidade;
+3. modelar a persistência relacional inicial em PostgreSQL;
+4. abrir caminho para o futuro `POST /analyze`.
 
 Em resumo:
 
-**o BlockNexus já saiu do estado puramente conceitual; a prioridade agora é transformar dados de mods em um modelo confiável para sustentar o futuro `POST /analyze`**.
+**o BlockNexus já tem uma base inicial de ingestão utilizável; a prioridade agora é transformar esse catálogo em modelo de domínio e regra de negócio para sustentar o futuro `POST /analyze`**.
