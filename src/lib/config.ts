@@ -1,6 +1,9 @@
 type AppConfig = {
   port: number;
   nodeEnv: string;
+  modrinthApiBaseUrl: string;
+  modrinthUserAgent: string;
+  catalogStorageDir: string;
 };
 
 function parsePort(value: string | undefined): number {
@@ -21,5 +24,9 @@ function parsePort(value: string | undefined): number {
 
 export const config: AppConfig = {
   port: parsePort(process.env.PORT),
-  nodeEnv: process.env.NODE_ENV ?? "development"
+  nodeEnv: process.env.NODE_ENV ?? "development",
+  modrinthApiBaseUrl: process.env.MODRINTH_API_BASE_URL ?? "https://api.modrinth.com/v2",
+  modrinthUserAgent:
+    process.env.MODRINTH_USER_AGENT ?? "block-nexus-dev/0.1.0 (local-development)",
+  catalogStorageDir: process.env.CATALOG_STORAGE_DIR ?? "storage/catalog"
 };
