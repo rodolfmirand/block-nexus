@@ -107,14 +107,14 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Definir a base de dados de mods do produto
-- **Status:** Todo
+- **Status:** Done
 - **Objetivo:** garantir uma fonte de dados utilizável para o domínio de compatibilidade
 
 ### BNX-101
 
 - **Tipo:** Spike
 - **Título:** Avaliar fontes de dados para mods e metadados
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-000
 - **Critério de aceite:** documento comparando fontes, cobertura de dados, limitações e recomendação final
 
@@ -122,7 +122,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Definir o contrato canônico de ingestão
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-101
 - **Critério de aceite:** existe um esquema interno para normalizar dados externos
 
@@ -130,7 +130,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar pipeline inicial de ingestão
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-102
 - **Critério de aceite:** o projeto consegue importar um conjunto inicial de mods para persistência local
 
@@ -138,7 +138,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Definir estratégia de atualização do catálogo
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-103
 - **Critério de aceite:** o projeto possui política documentada de refresh, versionamento ou snapshot
 
@@ -398,9 +398,8 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-101
-- BNX-102
 - BNX-201
 - BNX-202
 - BNX-203
 - BNX-204
+- BNX-304
