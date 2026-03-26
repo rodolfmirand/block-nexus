@@ -11,9 +11,22 @@ O repositório ja possui:
 - estrutura de projeto organizada;
 - configuracao de desenvolvimento;
 - endpoint `GET /health`;
-- base pronta para evoluir para `POST /analyze`.
+- pipeline inicial de ingestao de catalogo via Modrinth.
 
-O proximo foco e a **Fase 1**, dedicada a fonte de dados dos mods e ao modelo de dominio.
+A **Fase 1** agora tem uma base operacional: fonte definida, contrato canonico, adapter inicial, ingestao validada e estrategia de atualizacao documentada.
+
+## Fonte de dados inicial
+
+O projeto adotou o **Modrinth** como fonte primaria inicial do catalogo.
+
+Motivos principais:
+
+- menor atrito de acesso para o MVP;
+- API publica para a maioria das leituras;
+- dados de projeto, versao, loaders, game versions e dependencias;
+- melhor velocidade para sair do bootstrap e entrar na construcao do produto.
+
+O repositório tambem ja possui um comando inicial de ingestao para buscar projetos reais do Modrinth e persistir um snapshot local normalizado.
 
 ## Stack inicial
 
@@ -34,6 +47,7 @@ src/
   lib/
     config.ts
   modules/
+  scripts/
   types/
 ```
 
@@ -42,6 +56,7 @@ src/
 - `npm run dev`: inicia o servidor em modo de desenvolvimento
 - `npm run build`: compila o projeto para `dist/`
 - `npm run start`: executa a versao compilada
+- `npm run catalog:ingest:modrinth -- <slug...>`: busca projetos do Modrinth e grava snapshot local
 - `npm run typecheck`: valida tipos sem gerar build
 - `npm run lint`: executa o lint
 - `npm run format`: formata os arquivos
@@ -79,18 +94,29 @@ npm run dev
 curl http://localhost:3000/health
 ```
 
+5. Gere um snapshot inicial do catalogo:
+
+```bash
+npm run catalog:ingest:modrinth -- fabric-api modmenu sodium
+```
+
+Por padrao, o snapshot e salvo em `storage/catalog/modrinth/bootstrap.json`.
+
 ## Documentacao
 
 - [Contexto do projeto](./docs/blocknexus.context.md)
 - [Roadmap](./docs/blocknexus.roadmap.md)
 - [Tarefas tecnicas](./docs/blocknexus.tasks.md)
 - [Arquitetura inicial](./docs/blocknexus.architecture.md)
+- [Decisao de fonte de dados](./docs/blocknexus.data-source.md)
+- [Contrato canonico de ingestao](./docs/blocknexus.ingestion-contract.md)
+- [Estrategia de atualizacao do catalogo](./docs/blocknexus.catalog-refresh.md)
 
 ## Proximo passo
 
 O trabalho segue para:
 
-- definir a fonte primaria de dados dos mods;
-- normalizar as entidades centrais do dominio;
-- preparar a persistencia inicial do catalogo;
-- iniciar o desenho do fluxo de analise de compatibilidade.
+- formalizar o modelo de dominio do motor de analise;
+- definir regras de dependencias, conflitos e incompatibilidades;
+- preparar a persistencia relacional inicial;
+- abrir caminho para o futuro `POST /analyze`.
