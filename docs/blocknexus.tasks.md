@@ -193,14 +193,14 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Implementar o núcleo de análise de compatibilidade
-- **Status:** Todo
+- **Status:** Done
 - **Objetivo:** produzir resultados confiáveis a partir de uma seleção de mods
 
 ### BNX-301
 
 - **Tipo:** Task
 - **Título:** Implementar resolução de dependências transitivas
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-202
 - **Critério de aceite:** o serviço resolve dependências a partir de uma entrada mínima e registra justificativas básicas
 
@@ -208,7 +208,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar detecção de conflitos
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-203
 - **Critério de aceite:** o serviço identifica conflitos explícitos no conjunto analisado
 
@@ -216,7 +216,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar validação por versão do Minecraft e loader
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-203
 - **Critério de aceite:** a análise sinaliza incompatibilidades de ambiente com mensagens compreensíveis
 
@@ -224,7 +224,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Definir contrato de resposta do motor de análise
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-301
 - **Critério de aceite:** a saída do motor possui estrutura estável para dependências, conflitos e avisos
 
@@ -398,8 +398,8 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-301
-- BNX-302
-- BNX-303
-- BNX-304
 - BNX-401
+- BNX-402
+- BNX-403
+- BNX-404
+- BNX-503

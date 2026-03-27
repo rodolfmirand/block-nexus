@@ -118,16 +118,17 @@ A unidade principal de compatibilidade é `ModVersion`.
 
 ### 5.3 Motor de Análise
 
-O núcleo do produto será um serviço responsável por:
+O núcleo do produto agora possui base executável para:
 
 - resolver dependências transitivas;
 - detectar conflitos explícitos;
 - apontar incompatibilidades por loader e versão;
-- produzir uma resposta explicável e utilizável.
+- produzir um contrato interno estável de resultado;
+- ler o catálogo a partir do PostgreSQL.
 
 ### 5.4 API do Produto
 
-Depois da base de dados e do domínio, a prioridade é expor o fluxo principal do produto:
+Com o motor interno implementado, a próxima prioridade é expor o fluxo principal do produto:
 
 - `GET /health`
 - `POST /analyze`
@@ -161,7 +162,7 @@ A ordem correta é:
 
 ## 7. Estado Atual do Repositório
 
-Neste momento, o repositório saiu do bootstrap inicial e já possui base funcional para ingestão e modelagem do domínio.
+Neste momento, o repositório possui base funcional para ingestão, modelagem de domínio e motor de compatibilidade.
 
 O que foi estruturado na Fase 0:
 
@@ -186,17 +187,24 @@ O que foi estruturado na Fase 2:
 - regras de dependências, conflitos e incompatibilidades;
 - esquema relacional inicial em PostgreSQL.
 
+O que foi estruturado na Fase 3:
+
+- contrato interno de análise;
+- serviço de resolução transitiva;
+- detecção de conflitos e incompatibilidades;
+- implementação PostgreSQL do repositório do motor.
+
 ---
 
 ## 8. Próximo Passo Imediato
 
-Com a base da **Fase 2** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 3**, com foco em:
+Com a base da **Fase 3** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 4**, com foco em:
 
-1. implementar a resolução de dependências transitivas;
-2. implementar a detecção de conflitos;
-3. validar compatibilidade por loader e versão do Minecraft;
-4. definir o contrato de resposta do motor de análise.
+1. criar o contrato HTTP do `POST /analyze`;
+2. validar payload de entrada;
+3. integrar o endpoint ao motor de análise;
+4. documentar requests e responses do MVP.
 
 Em resumo:
 
-**o BlockNexus já tem ingestão inicial, modelo de domínio e schema relacional; a prioridade agora é transformar essa base em um motor de compatibilidade executável**.
+**o BlockNexus já tem ingestão, domínio, schema relacional e motor interno de compatibilidade; a prioridade agora é expor esse núcleo como API utilizável**.
