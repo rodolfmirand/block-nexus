@@ -2,7 +2,7 @@
 
 BlockNexus e uma API para analise de compatibilidade de mods e montagem de modpacks no ecossistema de Minecraft.
 
-Neste momento, a base da **Fase 0** foi estruturada e o projeto ja possui um backend inicial executavel para servir de fundacao ao MVP.
+Neste momento, o projeto ja possui base funcional para ingestao de catalogo, modelagem de dominio e preparacao do schema relacional do MVP.
 
 ## Estado atual
 
@@ -11,9 +11,11 @@ O repositório ja possui:
 - estrutura de projeto organizada;
 - configuracao de desenvolvimento;
 - endpoint `GET /health`;
-- pipeline inicial de ingestao de catalogo via Modrinth.
+- pipeline inicial de ingestao de catalogo via Modrinth;
+- modelo de dominio source-agnostic;
+- schema inicial em PostgreSQL.
 
-A **Fase 1** agora tem uma base operacional: fonte definida, contrato canonico, adapter inicial, ingestao validada e estrategia de atualizacao documentada.
+As Fases 1 e 2 agora estao fechadas. O proximo foco e a **Fase 3**, dedicada ao motor de analise de compatibilidade.
 
 ## Fonte de dados inicial
 
@@ -38,6 +40,7 @@ O repositório tambem ja possui um comando inicial de ingestao para buscar proje
 ## Estrutura do projeto
 
 ```text
+db/
 docs/
 src/
   app.ts
@@ -47,6 +50,8 @@ src/
   lib/
     config.ts
   modules/
+    catalog/
+    compatibility/
   scripts/
   types/
 ```
@@ -111,12 +116,15 @@ Por padrao, o snapshot e salvo em `storage/catalog/modrinth/bootstrap.json`.
 - [Decisao de fonte de dados](./docs/blocknexus.data-source.md)
 - [Contrato canonico de ingestao](./docs/blocknexus.ingestion-contract.md)
 - [Estrategia de atualizacao do catalogo](./docs/blocknexus.catalog-refresh.md)
+- [Modelo de dominio](./docs/blocknexus.domain-model.md)
+- [Regras de compatibilidade](./docs/blocknexus.compatibility-rules.md)
+- [Schema relacional inicial](./docs/blocknexus.postgres-schema.md)
 
 ## Proximo passo
 
 O trabalho segue para:
 
-- formalizar o modelo de dominio do motor de analise;
-- definir regras de dependencias, conflitos e incompatibilidades;
-- preparar a persistencia relacional inicial;
-- abrir caminho para o futuro `POST /analyze`.
+- implementar a resolucao de dependencias transitivas;
+- implementar a deteccao de conflitos;
+- validar compatibilidade por loader e versao do Minecraft;
+- definir o contrato de resposta do motor de analise.
