@@ -150,14 +150,14 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Formalizar o domínio de compatibilidade de mods
-- **Status:** Todo
+- **Status:** Done
 - **Objetivo:** traduzir o problema do produto em entidades e regras explícitas
 
 ### BNX-201
 
 - **Tipo:** Task
 - **Título:** Definir entidades centrais do domínio
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-101
 - **Critério de aceite:** `Mod`, `ModVersion`, `Dependency`, `Conflict`, `LoaderSupport` e `MinecraftVersionSupport` estão documentados
 
@@ -165,7 +165,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Definir regras de resolução de dependências
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-201
 - **Critério de aceite:** regras para dependência obrigatória, opcional, transitiva e ciclos estão descritas
 
@@ -173,7 +173,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Definir regras de conflito e incompatibilidade
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-201
 - **Critério de aceite:** conflitos explícitos, incompatibilidades por loader e por versão têm semântica clara
 
@@ -181,7 +181,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Modelar esquema relacional inicial em PostgreSQL
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-201
 - **Critério de aceite:** existe um esquema inicial coerente com o domínio definido
 
@@ -398,8 +398,8 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-201
-- BNX-202
-- BNX-203
-- BNX-204
+- BNX-301
+- BNX-302
+- BNX-303
 - BNX-304
+- BNX-401
