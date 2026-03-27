@@ -2,42 +2,47 @@
 
 ## 1. Objetivo
 
-Este documento descreve a arquitetura inicial do BlockNexus para a Fase 0 e prepara a base para o MVP do produto.
+Este documento descreve a arquitetura inicial do BlockNexus para as fases iniciais do MVP.
 
-O foco desta arquitetura é:
+O foco desta arquitetura e:
 
 - simplicidade de desenvolvimento;
-- clareza de domínio;
-- separação básica de responsabilidades;
-- evolução segura para as próximas fases.
+- clareza de dominio;
+- separacao basica de responsabilidades;
+- evolucao segura para as proximas fases.
 
 ---
 
-## 2. Direção Arquitetural
+## 2. Direcao Arquitetural
 
-Na fase inicial, o BlockNexus será um backend em `TypeScript` com `Hono`, executando localmente em `Node.js`.
+Nesta fase, o BlockNexus e um backend em `TypeScript` com `Hono`, executando localmente em `Node.js`.
 
-O projeto não será estruturado desde o início como uma plataforma AWS completa. A arquitetura local será simples e orientada a camadas, permitindo posterior adaptação para ambiente serverless.
+O projeto nao foi estruturado desde o inicio como uma plataforma AWS completa. A arquitetura local permanece simples e orientada a camadas, permitindo posterior adaptacao para ambiente serverless.
 
-### Direção atual
+### Direcao atual
 
 - runtime local: Node.js
 - framework HTTP: Hono
-- persistência inicial planejada: PostgreSQL
-- prioridade funcional: `GET /health` e base para `POST /analyze`
+- persistencia atual do catalogo: snapshots JSON normalizados
+- persistencia relacional planejada: PostgreSQL
+- prioridade funcional atual: modelagem do dominio e base para o motor de analise
 
-### Direção futura
+### Direcao futura
 
-- adaptação para AWS Lambda e API Gateway
-- uso de PostgreSQL gerenciado
+- implementacao do motor de compatibilidade
+- exposicao do endpoint `POST /analyze`
+- uso de PostgreSQL como baseline do produto
 - eventual variante em banco de grafos para o TCC
-- possíveis componentes de cache e sessão depois do MVP
+- componentes de cache e sessao apenas depois do nucleo funcional
 
 ---
 
-## 3. Estrutura Inicial de Pastas
+## 3. Estrutura Atual de Pastas
 
 ```text
+db/
+  schema.sql
+docs/
 src/
   app.ts
   index.ts
@@ -46,6 +51,12 @@ src/
   lib/
     config.ts
   modules/
+    catalog/
+      ingestion/
+    compatibility/
+      domain/
+  scripts/
+    ingest-modrinth.ts
   types/
 ```
 
@@ -55,67 +66,74 @@ src/
   ponto de entrada do servidor local
 
 - `src/app.ts`
-  composição principal da aplicação Hono e registro de rotas
+  composicao principal da aplicacao Hono e registro de rotas
 
 - `src/routes/`
   rotas HTTP agrupadas por responsabilidade
 
 - `src/lib/`
-  utilitários compartilhados e leitura de configuração
+  utilitarios compartilhados e leitura de configuracao
 
-- `src/modules/`
-  módulos de domínio e aplicação que surgirão nas próximas fases
+- `src/modules/catalog/ingestion/`
+  ingestao, normalizacao e persistencia local do catalogo externo
 
-- `src/types/`
-  tipos compartilhados do projeto quando necessários
+- `src/modules/compatibility/domain/`
+  modelo de dominio source-agnostic do produto
 
----
+- `src/scripts/`
+  comandos operacionais e scripts de suporte ao desenvolvimento
 
-## 4. Princípios de Organização do Código
-
-As próximas implementações devem seguir estes princípios:
-
-- regra de domínio fora da camada HTTP;
-- validação de entrada próxima da borda da aplicação;
-- dependências de infraestrutura isoladas do núcleo de análise;
-- contratos de resposta estáveis e explícitos;
-- evolução incremental por módulos.
+- `db/`
+  schema relacional inicial e futuros artefatos de banco
 
 ---
 
-## 5. Sequência de Evolução
+## 4. Principios de Organizacao do Codigo
+
+As proximas implementacoes devem seguir estes principios:
+
+- regra de dominio fora da camada HTTP;
+- validacao de entrada proxima da borda da aplicacao;
+- dependencias de infraestrutura isoladas do nucleo de analise;
+- contratos de resposta estaveis e explicitos;
+- evolucao incremental por modulos.
+
+---
+
+## 5. Sequencia de Evolucao
 
 ### Fase 0
 
 - bootstrap do projeto
 - `GET /health`
-- configuração de ambiente
-- documentação operacional
+- configuracao de ambiente
+- documentacao operacional
 
 ### Fase 1
 
-- definição da fonte de dados
-- ingestão inicial
-- normalização do catálogo de mods
+- definicao da fonte de dados
+- ingestao inicial
+- normalizacao do catalogo de mods
 
 ### Fase 2
 
-- modelagem do domínio
+- modelagem do dominio
+- regras de compatibilidade
 - esquema relacional inicial
 
 ### Fase 3
 
-- implementação do motor de análise
+- implementacao do motor de analise
 
 ### Fase 4
 
-- criação do endpoint `POST /analyze`
+- criacao do endpoint `POST /analyze`
 
 ---
 
-## 6. Observações Importantes
+## 6. Observacoes Importantes
 
-- o projeto ainda não deve assumir Redis como dependência obrigatória;
-- o projeto ainda não deve assumir autenticação como eixo principal;
-- o projeto ainda não deve ser desenhado em função do experimento acadêmico;
-- a primeira meta concreta é tornar o backend executável, organizado e pronto para crescer.
+- o projeto ainda nao deve assumir Redis como dependencia obrigatoria;
+- o projeto ainda nao deve assumir autenticacao como eixo principal;
+- o projeto ainda nao deve ser desenhado em funcao do experimento academico;
+- a proxima meta concreta e transformar o modelo de dominio em um motor de compatibilidade executavel.
