@@ -1,0 +1,58 @@
+import type {
+  CompatibilityIssue,
+  CompatibilitySelection,
+  ConflictRule,
+  DependencyKind,
+  DependencyRule,
+  LoaderCode,
+  MinecraftVersionCode,
+  Mod,
+  ModVersion
+} from "../domain/index.js";
+
+export type AnalyzableModVersion = ModVersion & {
+  mod: Mod;
+  dependencies: DependencyRule[];
+  conflicts: ConflictRule[];
+};
+
+export type CompatibilityAnalysisInput = {
+  loader: LoaderCode;
+  minecraftVersion: MinecraftVersionCode;
+  selectedModVersionIds: string[];
+};
+
+export type ResolvedSelection = CompatibilitySelection & {
+  modVersionId: string;
+  modSlug: string;
+  versionNumber: string;
+};
+
+export type ResolvedDependency = {
+  sourceModVersionId: string;
+  dependencyId: string;
+  dependencyKind: DependencyKind;
+  targetModVersionId: string;
+  depth: number;
+};
+
+export type MissingDependency = {
+  sourceModVersionId: string;
+  dependencyId: string;
+  dependencyKind: DependencyKind;
+  targetModId: string | null;
+  targetExternalProjectId: string | null;
+  severity: "error" | "warning";
+  message: string;
+};
+
+export type CompatibilityAnalysisResult = {
+  status: "compatible" | "incompatible";
+  loader: LoaderCode;
+  minecraftVersion: MinecraftVersionCode;
+  requestedModVersionIds: string[];
+  resolvedSelections: ResolvedSelection[];
+  resolvedDependencies: ResolvedDependency[];
+  missingDependencies: MissingDependency[];
+  issues: CompatibilityIssue[];
+};
