@@ -102,20 +102,19 @@ O projeto já possui:
 - pipeline para geração de snapshot local do catálogo;
 - política inicial de atualização por snapshot controlado.
 
-Sem essa normalização, não existe análise consistente de dependências, conflitos, loaders e compatibilidade por versão.
-
 ### 5.2 Modelo de Domínio
 
-O domínio mínimo esperado para o produto inclui:
+O domínio mínimo esperado para o produto agora está formalizado em torno de:
 
 - `Mod`
 - `ModVersion`
-- `Dependency`
-- `Conflict`
-- `LoaderSupport`
-- `MinecraftVersionSupport`
+- `ModFile`
+- `DependencyRule`
+- `ConflictRule`
+- `CompatibilitySelection`
+- `CompatibilityIssue`
 
-Essas entidades devem ser definidas de forma independente da tecnologia de persistência.
+A unidade principal de compatibilidade é `ModVersion`.
 
 ### 5.3 Motor de Análise
 
@@ -162,7 +161,7 @@ A ordem correta é:
 
 ## 7. Estado Atual do Repositório
 
-Neste momento, o repositório saiu do bootstrap inicial e já possui uma base operacional para ingestão de dados.
+Neste momento, o repositório saiu do bootstrap inicial e já possui base funcional para ingestão e modelagem do domínio.
 
 O que foi estruturado na Fase 0:
 
@@ -181,17 +180,23 @@ O que foi estruturado na Fase 1:
 - pipeline inicial para gerar snapshot local do catálogo;
 - estratégia documentada de atualização do catálogo.
 
+O que foi estruturado na Fase 2:
+
+- modelo de domínio do produto;
+- regras de dependências, conflitos e incompatibilidades;
+- esquema relacional inicial em PostgreSQL.
+
 ---
 
 ## 8. Próximo Passo Imediato
 
-Com a base da **Fase 1** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 2**, com foco em:
+Com a base da **Fase 2** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 3**, com foco em:
 
-1. formalizar entidades centrais do domínio;
-2. definir regras de dependência, conflito e incompatibilidade;
-3. modelar a persistência relacional inicial em PostgreSQL;
-4. abrir caminho para o futuro `POST /analyze`.
+1. implementar a resolução de dependências transitivas;
+2. implementar a detecção de conflitos;
+3. validar compatibilidade por loader e versão do Minecraft;
+4. definir o contrato de resposta do motor de análise.
 
 Em resumo:
 
-**o BlockNexus já tem uma base inicial de ingestão utilizável; a prioridade agora é transformar esse catálogo em modelo de domínio e regra de negócio para sustentar o futuro `POST /analyze`**.
+**o BlockNexus já tem ingestão inicial, modelo de domínio e schema relacional; a prioridade agora é transformar essa base em um motor de compatibilidade executável**.
