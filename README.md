@@ -13,7 +13,8 @@ O repositório ja possui:
 - endpoint `GET /health`;
 - pipeline inicial de ingestao de catalogo via Modrinth;
 - modelo de dominio source-agnostic;
-- schema inicial em PostgreSQL.
+- schema inicial em PostgreSQL;
+- conexao real da aplicacao com `DATABASE_URL`.
 
 As Fases 1 e 2 agora estao fechadas. O proximo foco e a **Fase 3**, dedicada ao motor de analise de compatibilidade.
 
@@ -36,12 +37,15 @@ O repositório tambem ja possui um comando inicial de ingestao para buscar proje
 - TypeScript
 - Hono
 - PostgreSQL como direcao inicial de persistencia
+- Docker Compose para ambiente local do banco
 
 ## Estrutura do projeto
 
 ```text
+compose.yaml
 db/
 docs/
+scripts/
 src/
   app.ts
   index.ts
@@ -49,6 +53,7 @@ src/
     health.ts
   lib/
     config.ts
+    db.ts
   modules/
     catalog/
     compatibility/
@@ -62,6 +67,10 @@ src/
 - `npm run build`: compila o projeto para `dist/`
 - `npm run start`: executa a versao compilada
 - `npm run catalog:ingest:modrinth -- <slug...>`: busca projetos do Modrinth e grava snapshot local
+- `npm run db:up`: sobe o PostgreSQL no Docker
+- `npm run db:down`: derruba os containers do compose
+- `npm run db:logs`: acompanha os logs do PostgreSQL
+- `npm run db:schema:apply`: aplica `db/schema.sql` no container do PostgreSQL
 - `npm run typecheck`: valida tipos sem gerar build
 - `npm run lint`: executa o lint
 - `npm run format`: formata os arquivos
@@ -87,25 +96,66 @@ No Windows PowerShell, voce pode usar:
 Copy-Item .env.example .env
 ```
 
-3. Inicie o servidor:
+A aplicacao carrega automaticamente o arquivo `.env` ao iniciar.
+
+3. Suba o banco local no Docker:
+
+```bash
+npm run db:up
+```
+
+4. Aplique o schema inicial no container:
+
+```bash
+npm run db:schema:apply
+```
+
+5. Inicie o servidor:
 
 ```bash
 npm run dev
 ```
 
-4. Teste o health check:
+6. Teste o health check:
 
 ```bash
 curl http://localhost:3000/health
 ```
 
-5. Gere um snapshot inicial do catalogo:
+Quando o banco estiver acessivel, o endpoint retorna `200` e inclui o status real da conexao PostgreSQL.
+
+7. Gere um snapshot inicial do catalogo:
 
 ```bash
 npm run catalog:ingest:modrinth -- fabric-api modmenu sodium
 ```
 
 Por padrao, o snapshot e salvo em `storage/catalog/modrinth/bootstrap.json`.
+
+## Banco local com Docker
+
+O ambiente local usa um unico servico `postgres` definido em [compose.yaml](./compose.yaml).
+
+Configuracao padrao do banco:
+
+- host: `localhost`
+- porta: `5432`
+- database: `blocknexus`
+- user: `blocknexus`
+- password: `blocknexus`
+
+A `DATABASE_URL` de desenvolvimento em [.env.example](./.env.example) aponta para esse ambiente:
+
+```env
+DATABASE_URL=postgresql://blocknexus:blocknexus@localhost:5432/blocknexus
+```
+
+O script de aplicacao do schema fica em [scripts/apply-db-schema.mjs](./scripts/apply-db-schema.mjs) e executa `psql` dentro do proprio container.
+
+Pre-requisitos:
+
+- Docker Desktop ou Docker Engine com Compose habilitado
+- porta `5432` livre na maquina local
 
 ## Documentacao
 
