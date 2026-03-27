@@ -20,5 +20,18 @@ export default tseslint.config(
     rules: {
       "no-console": "off"
     }
+  },
+  {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-console": "off"
+    }
   }
 );
