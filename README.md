@@ -2,7 +2,7 @@
 
 BlockNexus e uma API para analise de compatibilidade de mods e montagem de modpacks no ecossistema de Minecraft.
 
-Neste momento, o projeto ja possui base funcional para ingestao de catalogo, modelagem de dominio e preparacao do schema relacional do MVP.
+Neste momento, o projeto ja possui base funcional para ingestao de catalogo, modelagem de dominio, schema relacional e motor interno de compatibilidade.
 
 ## Estado atual
 
@@ -14,9 +14,10 @@ O repositório ja possui:
 - pipeline inicial de ingestao de catalogo via Modrinth;
 - modelo de dominio source-agnostic;
 - schema inicial em PostgreSQL;
-- conexao real da aplicacao com `DATABASE_URL`.
+- conexao real da aplicacao com `DATABASE_URL`;
+- motor interno de analise de compatibilidade.
 
-As Fases 1 e 2 agora estao fechadas. O proximo foco e a **Fase 3**, dedicada ao motor de analise de compatibilidade.
+As Fases 1, 2 e 3 agora estao fechadas. O proximo foco e a **Fase 4**, dedicada a expor o fluxo por API.
 
 ## Fonte de dados inicial
 
@@ -57,6 +58,9 @@ src/
   modules/
     catalog/
     compatibility/
+      domain/
+      engine/
+      infrastructure/
   scripts/
   types/
 ```
@@ -67,6 +71,7 @@ src/
 - `npm run build`: compila o projeto para `dist/`
 - `npm run start`: executa a versao compilada
 - `npm run catalog:ingest:modrinth -- <slug...>`: busca projetos do Modrinth e grava snapshot local
+- `npm run compatibility:smoke`: executa um cenário em memória para validar o motor de compatibilidade
 - `npm run db:up`: sobe o PostgreSQL no Docker
 - `npm run db:down`: derruba os containers do compose
 - `npm run db:logs`: acompanha os logs do PostgreSQL
@@ -124,7 +129,13 @@ curl http://localhost:3000/health
 
 Quando o banco estiver acessivel, o endpoint retorna `200` e inclui o status real da conexao PostgreSQL.
 
-7. Gere um snapshot inicial do catalogo:
+7. Execute o smoke do motor de compatibilidade:
+
+```bash
+npm run compatibility:smoke
+```
+
+8. Gere um snapshot inicial do catalogo:
 
 ```bash
 npm run catalog:ingest:modrinth -- fabric-api modmenu sodium
@@ -174,7 +185,7 @@ Pre-requisitos:
 
 O trabalho segue para:
 
-- implementar a resolucao de dependencias transitivas;
-- implementar a deteccao de conflitos;
-- validar compatibilidade por loader e versao do Minecraft;
-- definir o contrato de resposta do motor de analise.
+- criar o contrato HTTP do `POST /analyze`;
+- validar payload de entrada;
+- integrar a rota ao motor de compatibilidade;
+- documentar requests e responses do MVP.
