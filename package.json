@@ -12,6 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "catalog:ingest:modrinth": "tsx src/scripts/ingest-modrinth.ts",
+    "catalog:ingest:modrinth:top": "tsx src/scripts/ingest-modrinth-top.ts",
+    "catalog:import:snapshot": "tsx src/scripts/import-catalog-snapshot.ts",
     "compatibility:smoke": "tsx src/scripts/smoke-compatibility.ts",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
