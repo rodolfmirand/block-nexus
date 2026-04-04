@@ -2,104 +2,87 @@
 
 BlockNexus e uma API para analise de compatibilidade de mods e montagem de modpacks no ecossistema de Minecraft.
 
-Neste momento, o projeto ja possui base funcional para ingestao de catalogo, importacao automatica para PostgreSQL, modelagem de dominio, schema relacional, motor interno de compatibilidade, busca de mods e endpoint de analise.
-
 ## Estado atual
 
-O repositório ja possui:
+O repositorio ja possui:
 
-- estrutura de projeto organizada;
-- configuracao de desenvolvimento;
-- endpoint `GET /health`, `GET /mods/search`, `POST /analyze`, `GET /metrics` e Swagger em `/docs`;
-- pipeline inicial de ingestao de catalogo via Modrinth;
-- importador automatico de snapshot para PostgreSQL;
-- modelo de dominio source-agnostic;
-- schema inicial em PostgreSQL;
-- conexao real da aplicacao com `DATABASE_URL`;
-- motor interno de analise de compatibilidade.
+- endpoint `GET /health`, `GET /mods/search`, `GET /metrics`, `POST /analyze`;
+- endpoints de sessao anonima: `POST /sessions`, `GET /sessions/:sessionId`, `PUT /sessions/:sessionId/selection`, `POST /sessions/:sessionId/analyze`;
+- Swagger em `/docs`;
+- ingestao/importacao de catalogo para PostgreSQL;
+- motor de compatibilidade com selecao por `selectedMods`;
+- cache basico de analise em memoria;
+- logs estruturados e metricas basicas por rota.
 
 ## Stack inicial
 
 - Node.js
 - TypeScript
 - Hono
-- PostgreSQL como direcao inicial de persistencia
-- Docker Compose para ambiente local do banco
+- PostgreSQL
+- Docker Compose para banco local
 
 ## Scripts
 
-- `npm run dev`: inicia o servidor em modo de desenvolvimento
-- `npm run build`: compila o projeto para `dist/`
-- `npm run start`: executa a versao compilada
-- `npm run catalog:ingest:modrinth -- <slug...>`: busca projetos do Modrinth e grava snapshot local
-- `npm run catalog:import:snapshot -- [caminho-do-snapshot]`: importa snapshot para PostgreSQL
-- `npm run compatibility:smoke`: executa um cenario em memoria para validar o motor de compatibilidade
-- `npm run db:up`: sobe o PostgreSQL no Docker
-- `npm run db:down`: derruba os containers do compose
-- `npm run db:logs`: acompanha os logs do PostgreSQL
-- `npm run db:schema:apply`: aplica `db/schema.sql` no container do PostgreSQL
-- `npm run typecheck`: valida tipos sem gerar build
-- `npm run lint`: executa o lint
-- `npm run format`: formata os arquivos
-- `npm run format:check`: verifica formatacao
+- `npm run dev`: inicia o servidor em modo desenvolvimento
+- `npm run build`: compila para `dist/`
+- `npm run start`: executa build
+- `npm run catalog:ingest:modrinth -- <slug...>`: gera snapshot local
+- `npm run catalog:import:snapshot -- [arquivo]`: importa snapshot no PostgreSQL
+- `npm run compatibility:smoke`: cenario em memoria do motor
+- `npm run db:up`: sobe PostgreSQL no Docker
+- `npm run db:down`: derruba compose
+- `npm run db:logs`: logs do PostgreSQL
+- `npm run db:schema:apply`: aplica `db/schema.sql`
+- `npm run typecheck`: validacao de tipos
+- `npm run test`: testes automatizados
+- `npm run lint`: lint
+- `npm run format`: formatacao
 
 ## Como executar
 
-1. Instale as dependencias:
+1. Instale dependencias:
 
 ```bash
 npm install
 ```
 
-2. Crie o arquivo de ambiente local:
-
-```bash
-cp .env.example .env
-```
-
-No Windows PowerShell, voce pode usar:
+2. Crie ambiente local:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-3. Suba o banco local e aplique o schema:
+3. Suba banco e aplique schema:
 
 ```bash
 npm run db:up
 npm run db:schema:apply
 ```
 
-4. Gere snapshot e importe para o banco:
+4. Importe catalogo:
 
 ```bash
 npm run catalog:ingest:modrinth -- sodium modmenu
 npm run catalog:import:snapshot
 ```
 
-Opcionalmente, informe um arquivo especifico:
-
-```bash
-npm run catalog:import:snapshot -- storage/catalog/modrinth/phase1-smoke.json
-```
-
-5. Inicie o servidor:
+5. Suba API:
 
 ```bash
 npm run dev
 ```
 
-6. Teste os endpoints:
+6. Testes rapidos:
 
 ```bash
 curl http://localhost:3000/health
+curl http://localhost:3000/metrics
 curl "http://localhost:3000/mods/search?q=sodium&limit=10"
-curl -X POST http://localhost:3000/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"loader":"fabric","minecraftVersion":"1.21.1","selectedModVersionIds":["101"]}'
+curl -X POST http://localhost:3000/sessions
 ```
 
-7. Abra o Swagger para testar no navegador:
+## Swagger
 
 - UI: `http://localhost:3000/docs`
 - OpenAPI JSON: `http://localhost:3000/openapi.json`
@@ -116,14 +99,15 @@ curl -X POST http://localhost:3000/analyze \
 - [Modelo de dominio](./docs/blocknexus.domain-model.md)
 - [Regras de compatibilidade](./docs/blocknexus.compatibility-rules.md)
 - [Schema relacional inicial](./docs/blocknexus.postgres-schema.md)
-- [API do MVP](./docs/blocknexus.api.md)`r`n- [Limitacoes conhecidas](./docs/blocknexus.limitations.md)
+- [API do MVP](./docs/blocknexus.api.md)
+- [Limitacoes conhecidas](./docs/blocknexus.limitations.md)
 
-## Proximo passo
+## Configuracoes de expiracao
 
-O trabalho segue para:
+- `ANALYSIS_CACHE_TTL_MS` (default: `300000`)
+- `ANALYSIS_CACHE_MAX_ENTRIES` (default: `1000`)
+- `SESSION_TTL_MS` (default: `3600000`)
+- `SESSION_MAX_ENTRIES` (default: `1000`)
+- `CLEANUP_INTERVAL_MS` (default: `60000`)
 
-- adicionar logs estruturados no fluxo de analise;
-- medir latencia e taxa de erro do endpoint;
-- criar testes automatizados para cenarios principais;
-- documentar limitacoes conhecidas do MVP.
 
