@@ -35,3 +35,27 @@ test("collects basic metrics by route", async () => {
   assert.ok(metricsBody.totals.requests >= 1);
   assert.ok(metricsBody.routes.some((route: { route: string }) => route.route === "GET /health"));
 });
+
+test("returns 400 when inputMode conflicts with payload strategy", async () => {
+  const app = createApp();
+
+  const response = await app.request("http://localhost/analyze", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      loader: "forge",
+      minecraftVersion: "1.21.1",
+      inputMode: "version_ids",
+      selectedMods: [{ modSlug: "create" }]
+    })
+  });
+
+  assert.equal(response.status, 400);
+  const body = await response.json();
+  assert.equal(body.error, "Invalid request payload.");
+  assert.ok(
+    body.details.some((detail: string) => detail.includes("inputMode=version_ids"))
+  );
+});
