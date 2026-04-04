@@ -16,11 +16,29 @@ type CacheOptions = {
   maxEntries: number;
 };
 
+type AnalysisCacheMetrics = {
+  size: number;
+  hits: number;
+  misses: number;
+  writes: number;
+  evictions: number;
+  expirations: number;
+};
+
 const cache = new Map<string, CachedAnalysis>();
 
 let options: CacheOptions = {
   ttlMs: 5 * 60 * 1000,
   maxEntries: 1000
+};
+
+let metrics: AnalysisCacheMetrics = {
+  size: 0,
+  hits: 0,
+  misses: 0,
+  writes: 0,
+  evictions: 0,
+  expirations: 0
 };
 
 export function configureAnalysisCache(nextOptions: Partial<CacheOptions>): void {
@@ -56,6 +74,11 @@ function evictOldestCacheEntry(): void {
   }
 
   cache.delete(firstKey);
+  metrics.evictions += 1;
+}
+
+function refreshSizeMetric(): void {
+  metrics.size = cache.size;
 }
 
 export function buildAnalysisCacheKey(input: CompatibilityAnalysisInput): string {
@@ -73,16 +96,21 @@ export function getCachedAnalysis(input: CompatibilityAnalysisInput): Compatibil
   const cached = cache.get(key);
 
   if (!cached) {
+    metrics.misses += 1;
     return null;
   }
 
   if (Date.now() > cached.expiresAt) {
     cache.delete(key);
+    metrics.expirations += 1;
+    metrics.misses += 1;
+    refreshSizeMetric();
     return null;
   }
 
   cache.delete(key);
   cache.set(key, cached);
+  metrics.hits += 1;
 
   return cached.result;
 }
@@ -104,9 +132,13 @@ export function setCachedAnalysis(args: {
     result: args.result
   });
 
+  metrics.writes += 1;
+
   while (cache.size > options.maxEntries) {
     evictOldestCacheEntry();
   }
+
+  refreshSizeMetric();
 }
 
 export function cleanupExpiredCache(nowMs = Date.now()): number {
@@ -119,13 +151,33 @@ export function cleanupExpiredCache(nowMs = Date.now()): number {
     }
   }
 
+  if (removed > 0) {
+    metrics.expirations += removed;
+    refreshSizeMetric();
+  }
+
   return removed;
 }
 
 export function clearAnalysisCache(): void {
   cache.clear();
+  metrics = {
+    size: 0,
+    hits: 0,
+    misses: 0,
+    writes: 0,
+    evictions: 0,
+    expirations: 0
+  };
 }
 
 export function getAnalysisCacheSize(): number {
   return cache.size;
+}
+
+export function getAnalysisCacheMetrics(): AnalysisCacheMetrics {
+  return {
+    ...metrics,
+    size: cache.size
+  };
 }

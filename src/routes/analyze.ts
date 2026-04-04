@@ -3,6 +3,14 @@ import { randomUUID } from "node:crypto";
 import type { Hono } from "hono";
 
 import { getCachedAnalysis, setCachedAnalysis } from "../lib/analysis-cache.js";
+import {
+  recordAnalyzeCacheHit,
+  recordAnalyzeCacheMiss,
+  recordAnalyzeCompleted,
+  recordAnalyzeFailed,
+  recordAnalyzeRequest,
+  recordAnalyzeValidationError
+} from "../lib/metrics.js";
 import { logError, logInfo } from "../lib/logger.js";
 import { CompatibilityService } from "../modules/compatibility/engine/index.js";
 import type {
@@ -327,6 +335,8 @@ export function registerAnalyzeRoutes(app: Hono): void {
       );
     }
 
+    recordAnalyzeCacheMiss();
+
     logInfo("compatibility.analyze.started", {
       requestId,
       inputMode: validation.payload.inputMode,
@@ -371,6 +381,8 @@ export function registerAnalyzeRoutes(app: Hono): void {
       const errorMessage = formatError(error);
       const databaseUnavailable = isDatabaseUnavailable(errorMessage);
 
+      recordAnalyzeFailed(databaseUnavailable ? "db_unavailable" : "internal");
+
       logError("compatibility.analyze.failed", {
         requestId,
         inputMode: validation.payload.inputMode,
@@ -390,3 +402,4 @@ export function registerAnalyzeRoutes(app: Hono): void {
     }
   });
 }
+

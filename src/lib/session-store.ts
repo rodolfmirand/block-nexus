@@ -16,6 +16,16 @@ type SessionStoreOptions = {
   maxEntries: number;
 };
 
+type SessionStoreMetrics = {
+  size: number;
+  created: number;
+  hits: number;
+  misses: number;
+  writes: number;
+  evictions: number;
+  expirations: number;
+};
+
 export type AnonymousSession = {
   id: string;
   createdAt: string;
@@ -31,6 +41,16 @@ const sessions = new Map<string, AnonymousSession>();
 let options: SessionStoreOptions = {
   ttlMs: 60 * 60 * 1000,
   maxEntries: 1000
+};
+
+let metrics: SessionStoreMetrics = {
+  size: 0,
+  created: 0,
+  hits: 0,
+  misses: 0,
+  writes: 0,
+  evictions: 0,
+  expirations: 0
 };
 
 export function configureSessionStore(nextOptions: Partial<SessionStoreOptions>): void {
@@ -64,6 +84,11 @@ function evictOldestSession(): void {
   }
 
   sessions.delete(firstKey);
+  metrics.evictions += 1;
+}
+
+function refreshSizeMetric(): void {
+  metrics.size = sessions.size;
 }
 
 function upsertSession(session: AnonymousSession): AnonymousSession {
@@ -74,6 +99,7 @@ function upsertSession(session: AnonymousSession): AnonymousSession {
     evictOldestSession();
   }
 
+  refreshSizeMetric();
   return session;
 }
 
@@ -89,6 +115,9 @@ export function createAnonymousSession(): AnonymousSession {
     history: []
   };
 
+  metrics.created += 1;
+  metrics.writes += 1;
+
   return upsertSession(session);
 }
 
@@ -97,13 +126,19 @@ export function getAnonymousSession(sessionId: string): AnonymousSession | null 
   const session = sessions.get(sessionId);
 
   if (!session) {
+    metrics.misses += 1;
     return null;
   }
 
   if (isExpired(session, nowMs)) {
     sessions.delete(sessionId);
+    metrics.expirations += 1;
+    metrics.misses += 1;
+    refreshSizeMetric();
     return null;
   }
+
+  metrics.hits += 1;
 
   return upsertSession(touchSession(session, nowMs));
 }
@@ -122,6 +157,8 @@ export function saveSessionSelection(sessionId: string, selection: Compatibility
     updatedAt: new Date(nowMs).toISOString(),
     expiresAt: computeExpiresAt(nowMs)
   };
+
+  metrics.writes += 1;
 
   return upsertSession(next);
 }
@@ -155,6 +192,8 @@ export function appendSessionAnalysisResult(args: {
     expiresAt: computeExpiresAt(nowMs)
   };
 
+  metrics.writes += 1;
+
   return upsertSession(next);
 }
 
@@ -168,13 +207,34 @@ export function cleanupExpiredSessions(nowMs = Date.now()): number {
     }
   }
 
+  if (removed > 0) {
+    metrics.expirations += removed;
+    refreshSizeMetric();
+  }
+
   return removed;
 }
 
 export function clearSessions(): void {
   sessions.clear();
+  metrics = {
+    size: 0,
+    created: 0,
+    hits: 0,
+    misses: 0,
+    writes: 0,
+    evictions: 0,
+    expirations: 0
+  };
 }
 
 export function getSessionStoreSize(): number {
   return sessions.size;
+}
+
+export function getSessionStoreMetrics(): SessionStoreMetrics {
+  return {
+    ...metrics,
+    size: sessions.size
+  };
 }

@@ -9,6 +9,7 @@ import { registerDocsRoutes } from "./routes/docs.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerMetricsRoutes } from "./routes/metrics.js";
 import { registerModsRoutes } from "./routes/mods.js";
+import { registerRecommendationRoutes } from "./routes/recommendations.js";
 import { registerSessionRoutes } from "./routes/sessions.js";
 
 export function createApp(): Hono {
@@ -39,9 +40,11 @@ export function createApp(): Hono {
   registerHealthRoutes(app);
   registerModsRoutes(app);
   registerAnalyzeRoutes(app);
+  registerRecommendationRoutes(app);
   registerSessionRoutes(app);
   registerMetricsRoutes(app);
   registerDocsRoutes(app);
 
   return app;
 }
+

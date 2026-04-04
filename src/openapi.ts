@@ -19,6 +19,9 @@ export const openApiDocument = {
     },
     {
       name: "Compatibility"
+    },
+    {
+      name: "Recommendation"
     }
   ],
   paths: {
@@ -238,6 +241,64 @@ export const openApiDocument = {
           }
         }
       }
+    },
+    "/recommendations": {
+      post: {
+        tags: ["Recommendation"],
+        summary: "Gera recomendacoes iniciais de mods por regras",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/RecommendationRequest"
+              }
+            }
+          }
+        },
+        responses: {
+          "200": {
+            description: "Recomendacoes geradas",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/RecommendationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            description: "Payload invalido",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            description: "Banco indisponivel",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            description: "Falha interna de recomendacao",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   components: {
@@ -344,6 +405,92 @@ export const openApiDocument = {
           }
         }
       },
+
+      RecommendationRequest: {
+        type: "object",
+        required: ["loader", "minecraftVersion", "selectedMods"],
+        properties: {
+          loader: {
+            type: "string",
+            example: "forge"
+          },
+          minecraftVersion: {
+            type: "string",
+            example: "1.21.1"
+          },
+          selectedMods: {
+            type: "array",
+            minItems: 1,
+            items: {
+              $ref: "#/components/schemas/SelectedMod"
+            }
+          },
+          limit: {
+            type: "integer",
+            minimum: 1,
+            maximum: 50,
+            default: 20
+          }
+        }
+      },
+      RecommendationReason: {
+        type: "object",
+        properties: {
+          dependencyId: { type: "string" },
+          dependencyKind: { type: "string", enum: ["optional", "required"] },
+          sourceModSlug: { type: "string" },
+          sourceModVersionId: { type: "string" },
+          message: { type: "string" }
+        }
+      },
+      RecommendedMod: {
+        type: "object",
+        properties: {
+          modId: { type: "string" },
+          modSlug: { type: "string" },
+          modVersionId: { type: "string" },
+          versionNumber: { type: "string" },
+          score: { type: "integer" },
+          reasons: {
+            type: "array",
+            items: { $ref: "#/components/schemas/RecommendationReason" }
+          }
+        }
+      },
+      RecommendationResponse: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["compatible", "incompatible"] },
+          loader: { type: "string" },
+          minecraftVersion: { type: "string" },
+          requestedMods: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SelectedMod" }
+          },
+          recommendations: {
+            type: "array",
+            items: { $ref: "#/components/schemas/RecommendedMod" }
+          },
+          issues: {
+            type: "array",
+            items: { type: "object" }
+          },
+          missingDependencies: {
+            type: "array",
+            items: { type: "object" }
+          },
+          meta: {
+            type: "object",
+            properties: {
+              strategy: { type: "string" },
+              usedDependencyKind: { type: "string", enum: ["optional", "required", "none"] },
+              totalRecommendations: { type: "integer" },
+              limitApplied: { type: "integer" }
+            }
+          }
+        }
+      },
+
       MetricsResponse: {
         type: "object",
         properties: {
@@ -462,6 +609,8 @@ export const openApiDocument = {
     }
   }
 };
+
+
 
 
 

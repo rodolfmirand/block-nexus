@@ -5,6 +5,15 @@ import type { Hono } from "hono";
 import { getCachedAnalysis, setCachedAnalysis } from "../lib/analysis-cache.js";
 import { logError, logInfo } from "../lib/logger.js";
 import {
+  recordSessionAnalyzeCacheHit,
+  recordSessionAnalyzeCacheMiss,
+  recordSessionAnalyzeCompleted,
+  recordSessionAnalyzeFailed,
+  recordSessionAnalyzeMissingSelection,
+  recordSessionAnalyzeRequest,
+  recordSessionAnalyzeSessionNotFound
+} from "../lib/metrics.js";
+import {
   appendSessionAnalysisResult,
   createAnonymousSession,
   getAnonymousSession,
@@ -310,10 +319,14 @@ export function registerSessionRoutes(app: Hono): void {
   });
 
   app.post("/sessions/:sessionId/analyze", async (context) => {
+    recordSessionAnalyzeRequest();
+
     const sessionId = context.req.param("sessionId");
     const session = getAnonymousSession(sessionId);
 
     if (!session) {
+      recordSessionAnalyzeSessionNotFound();
+
       return context.json(
         {
           error: "Session not found."
@@ -323,6 +336,8 @@ export function registerSessionRoutes(app: Hono): void {
     }
 
     if (!session.selection) {
+      recordSessionAnalyzeMissingSelection();
+
       return context.json(
         {
           error: "Session has no selection.",
@@ -336,6 +351,9 @@ export function registerSessionRoutes(app: Hono): void {
     const cachedResult = getCachedAnalysis(session.selection);
 
     if (cachedResult) {
+      recordSessionAnalyzeCacheHit();
+      recordSessionAnalyzeCompleted(cachedResult.status);
+
       appendSessionAnalysisResult({
         sessionId,
         result: cachedResult,
@@ -364,6 +382,8 @@ export function registerSessionRoutes(app: Hono): void {
       );
     }
 
+    recordSessionAnalyzeCacheMiss();
+
     const compatibilityService = new CompatibilityService(new PostgresCompatibilityRepository());
 
     try {
@@ -373,6 +393,8 @@ export function registerSessionRoutes(app: Hono): void {
         input: session.selection,
         result
       });
+
+      recordSessionAnalyzeCompleted(result.status);
 
       appendSessionAnalysisResult({
         sessionId,
@@ -403,6 +425,9 @@ export function registerSessionRoutes(app: Hono): void {
       );
     } catch (error: unknown) {
       const errorMessage = formatError(error);
+      const databaseUnavailable = isDatabaseUnavailable(errorMessage);
+
+      recordSessionAnalyzeFailed(databaseUnavailable ? "db_unavailable" : "internal");
 
       logError("session.analyze.failed", {
         requestId,
@@ -413,12 +438,12 @@ export function registerSessionRoutes(app: Hono): void {
 
       return context.json(
         {
-          error: isDatabaseUnavailable(errorMessage)
+          error: databaseUnavailable
             ? "Database is unavailable for analysis."
             : "Compatibility analysis failed.",
           details: errorMessage
         },
-        isDatabaseUnavailable(errorMessage) ? 503 : 500
+        databaseUnavailable ? 503 : 500
       );
     }
   });
