@@ -88,24 +88,24 @@ Saida principal:
 - documentacao de limitacoes conhecidas do MVP
 
 
-### Fase 6 em andamento
+### Fase 6 concluida
 
 - sessao anonima em memoria com endpoints `/sessions`
 - persistencia temporaria da selecao do modpack por sessao
 - cache basico de analise por chave de entrada (TTL em memoria)
+- recomendacao inicial por regras via `POST /recommendations` com explicacao objetiva por item
+
 ## 6. Relacao com o TCC
 
 O TCC continua como etapa posterior, baseada no produto funcional, para comparar abordagem relacional e orientada a grafos com semantica equivalente.
 
 ## 7. Proximo Passo Imediato
 
-Com a Fase 6 iniciada, o proximo passo e consolidar essa fase com foco em:
+Com a Fase 6 concluida, o proximo passo e iniciar a Fase 7 (base experimental do TCC) com foco em:
 
-1. maturar persistencia de sessao (expiracao, limpeza e limites);
-2. evoluir cache (TTL configuravel e invalidacao por refresh de catalogo);
-3. refinamento de UX de integracao para consumidores da API e historico de analises por sessao.
+1. formalizar operacoes equivalentes de benchmark (BNX-701);
+2. definir dataset experimental e criterio de amostragem (BNX-702);
+3. abrir spike tecnico para variante em banco de grafos (BNX-703).
 
-Em resumo: o MVP ja possui fluxo funcional, observabilidade basica e testes iniciais; agora a prioridade e evoluir experiencia de uso.
-
-
+Em resumo: o produto ja cobre fluxo MVP, sessao, cache, observabilidade e recomendacao inicial; agora a prioridade e preparar metodologia experimental reproduzivel.
 

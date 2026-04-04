@@ -14,6 +14,7 @@ Este documento define o contrato HTTP inicial da API do BlockNexus para busca e 
 - `PUT /sessions/:sessionId/selection`
 - `POST /sessions/:sessionId/analyze`
 - `POST /analyze`
+- `POST /recommendations`
 
 ## 3. GET /mods/search
 
@@ -120,26 +121,94 @@ Banco indisponivel.
 
 Falha interna do motor.
 
-## 7. Swagger / OpenAPI
+
+## 7. POST /recommendations
+
+Gera recomendacoes iniciais por regra explicita do catalogo:
+
+- prioriza dependencias `optional` declaradas pelos mods selecionados;
+- se nao houver opcionais, faz fallback para dependencias `required`;
+- exclui mods ja selecionados pelo usuario;
+- retorna motivo de cada recomendacao.
+
+### Request
+
+```json
+{
+  "loader": "forge",
+  "minecraftVersion": "1.21.1",
+  "selectedMods": [
+    { "modSlug": "create" },
+    { "modSlug": "travelersbackpack" }
+  ],
+  "limit": 10
+}
+```
+
+### Response 200
+
+```json
+{
+  "status": "compatible",
+  "loader": "forge",
+  "minecraftVersion": "1.21.1",
+  "requestedMods": [
+    { "modSlug": "create" },
+    { "modSlug": "travelersbackpack" }
+  ],
+  "recommendations": [
+    {
+      "modId": "27",
+      "modSlug": "jei",
+      "modVersionId": "9808",
+      "versionNumber": "19.27.0.340",
+      "score": 1,
+      "reasons": [
+        {
+          "dependencyId": "37803",
+          "dependencyKind": "optional",
+          "sourceModSlug": "travelersbackpack",
+          "sourceModVersionId": "41613",
+          "message": "jei is a optional dependency declared by travelersbackpack."
+        }
+      ]
+    }
+  ],
+  "issues": [],
+  "missingDependencies": [],
+  "meta": {
+    "strategy": "optional_first_then_required",
+    "usedDependencyKind": "optional",
+    "totalRecommendations": 1,
+    "limitApplied": 10
+  }
+}
+```
+## 8. Swagger / OpenAPI
 
 - UI: `/docs`
 - Documento OpenAPI JSON: `/openapi.json`
 
-## 8. Observacoes
+## 9. Observacoes
 
-- `POST /analyze` retorna `200` quando a analise e executada, mesmo se o resultado de negocio for `incompatible`.
+- `POST /analyze` e `POST /recommendations` retornam `200` quando a analise e executada, mesmo se o resultado de negocio for `incompatible`.
 - Incompatibilidade e resultado de dominio, nao erro de infraestrutura.
 - No fluxo MVP, as versoes sao resolvidas automaticamente a partir de `selectedMods`, `loader` e `minecraftVersion`.
 
 
 
 
-## 9. TTL e limpeza
+## 10. TTL e limpeza
 
 - `ANALYSIS_CACHE_TTL_MS`: tempo de vida do cache de analise (ms).
 - `ANALYSIS_CACHE_MAX_ENTRIES`: limite maximo de entradas em cache.
 - `SESSION_TTL_MS`: tempo de vida da sessao anonima (ms).
 - `SESSION_MAX_ENTRIES`: limite maximo de sessoes em memoria.
 - `CLEANUP_INTERVAL_MS`: intervalo de limpeza periodica de sessoes/cache (ms).
+
+
+
+- O endpoint `/metrics` inclui bloco `analyze` com contadores de requests, cache hit/miss e falhas por motivo (validacao, banco, interno).
+
 
 

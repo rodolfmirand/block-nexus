@@ -362,7 +362,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Melhorar a experiência do usuário após estabilização do núcleo
-- **Status:** Todo
+- **Status:** Done
 - **Objetivo:** adicionar persistência de uso, eficiência e recursos complementares
 
 ### BNX-601
@@ -385,7 +385,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Story
 - **Título:** Implementar recomendação inicial de mods baseada em regras
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-500
 - **Critério de aceite:** recomendações simples são retornadas com explicação objetiva
 
@@ -438,8 +438,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-603
-- BNX-601 (hardening)
-- BNX-602 (hardening)
-
+- BNX-701
+- BNX-702
+- BNX-703 (Spike inicial de viabilidade)
 
