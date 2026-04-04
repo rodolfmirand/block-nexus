@@ -42,7 +42,7 @@ Saida principal:
 - runtime: Node.js
 - framework HTTP: Hono
 - persistencia baseline: PostgreSQL
-- endpoints atuais: `GET /health`, `GET /mods/search`, `POST /analyze`, `GET /docs`
+- endpoints atuais: `GET /health`, `GET /mods/search`, `GET /metrics`, `POST /analyze`, `GET /docs`
 
 ## 5. Estado Atual por Fase
 
@@ -71,13 +71,21 @@ Saida principal:
 - deteccao de conflitos e incompatibilidades
 - repositorio PostgreSQL para leitura do catalogo
 
-### Fase 4 em andamento
+### Fase 4 concluida
 
 - contrato HTTP de `POST /analyze`
 - validacao de payload
 - integracao da rota com o motor
 - documentacao Swagger inicial
-- pendencia: fluxo do MVP ainda precisa ser orientado a `selectedMods` (nao apenas `selectedModVersionIds`)
+- fluxo MVP orientado a `selectedMods` com fallback legado por `selectedModVersionIds`
+- sinalizacao explicita quando mod solicitado nao entra na selecao final
+
+### Fase 5 concluida
+
+- logs estruturados de requisicao e analise
+- metricas basicas em memoria (`GET /metrics`)
+- testes automatizados iniciais para rota e motor
+- documentacao de limitacoes conhecidas do MVP
 
 ## 6. Relacao com o TCC
 
@@ -85,11 +93,10 @@ O TCC continua como etapa posterior, baseada no produto funcional, para comparar
 
 ## 7. Proximo Passo Imediato
 
-Antes da Fase 5, o proximo passo e concluir a **Fase 4** no contrato correto do MVP, com foco em:
+Com as Fases 4 e 5 concluidas, o proximo passo e iniciar a **Fase 6**, com foco em:
 
-1. buscar versoes candidatas por mod para `loader` e `minecraftVersion`;
-2. selecionar combinacao compativel entre os mods escolhidos;
-3. retornar versoes resolvidas + dependencias na resposta do `POST /analyze`;
-4. atualizar Swagger com exemplos desse fluxo.
+1. sessao anonima para persistencia temporaria do modpack;
+2. cache de resultados frequentes;
+3. refinamento de UX de integracao para consumidores da API.
 
-Em resumo: a infraestrutura base esta pronta; agora a prioridade e fechar o fluxo funcional minimo do produto.
+Em resumo: o MVP ja possui fluxo funcional, observabilidade basica e testes iniciais; agora a prioridade e evoluir experiencia de uso.

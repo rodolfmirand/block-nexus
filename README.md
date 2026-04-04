@@ -10,7 +10,7 @@ O repositório ja possui:
 
 - estrutura de projeto organizada;
 - configuracao de desenvolvimento;
-- endpoint `GET /health`, `GET /mods/search`, `POST /analyze` e Swagger em `/docs`;
+- endpoint `GET /health`, `GET /mods/search`, `POST /analyze`, `GET /metrics` e Swagger em `/docs`;
 - pipeline inicial de ingestao de catalogo via Modrinth;
 - importador automatico de snapshot para PostgreSQL;
 - modelo de dominio source-agnostic;
@@ -116,7 +116,7 @@ curl -X POST http://localhost:3000/analyze \
 - [Modelo de dominio](./docs/blocknexus.domain-model.md)
 - [Regras de compatibilidade](./docs/blocknexus.compatibility-rules.md)
 - [Schema relacional inicial](./docs/blocknexus.postgres-schema.md)
-- [API do MVP](./docs/blocknexus.api.md)
+- [API do MVP](./docs/blocknexus.api.md)`r`n- [Limitacoes conhecidas](./docs/blocknexus.limitations.md)
 
 ## Proximo passo
 
@@ -126,3 +126,4 @@ O trabalho segue para:
 - medir latencia e taxa de erro do endpoint;
 - criar testes automatizados para cenarios principais;
 - documentar limitacoes conhecidas do MVP.
+

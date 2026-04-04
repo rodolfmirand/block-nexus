@@ -8,6 +8,7 @@ Este documento define o contrato HTTP inicial da API do BlockNexus para busca e 
 
 - `GET /health`
 - `GET /mods/search`
+- `GET /metrics`
 - `POST /analyze`
 
 ## 3. GET /mods/search
@@ -52,7 +53,11 @@ curl "http://localhost:3000/mods/search?q=sodium&limit=10"
 }
 ```
 
-## 4. POST /analyze
+## 4. GET /metrics
+
+Retorna metricas basicas por rota (latencia media, maximo e taxa de erro) na instancia atual.
+
+## 5. POST /analyze
 
 ### Request (fluxo MVP recomendado)
 
@@ -101,13 +106,14 @@ Banco indisponivel.
 
 Falha interna do motor.
 
-## 5. Swagger / OpenAPI
+## 6. Swagger / OpenAPI
 
 - UI: `/docs`
 - Documento OpenAPI JSON: `/openapi.json`
 
-## 6. Observacoes
+## 7. Observacoes
 
 - `POST /analyze` retorna `200` quando a analise e executada, mesmo se o resultado de negocio for `incompatible`.
 - Incompatibilidade e resultado de dominio, nao erro de infraestrutura.
 - No fluxo MVP, as versoes sao resolvidas automaticamente a partir de `selectedMods`, `loader` e `minecraftVersion`.
+

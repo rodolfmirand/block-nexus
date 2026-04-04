@@ -50,7 +50,24 @@ export const openApiDocument = {
         }
       }
     },
-    "/mods/search": {
+    "/metrics": {
+      get: {
+        tags: ["Health"],
+        summary: "Retorna metricas basicas de latencia e erro por rota",
+        responses: {
+          "200": {
+            description: "Metricas em memoria da instancia atual",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/MetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },    "/mods/search": {
       get: {
         tags: ["Catalog"],
         summary: "Busca mods por nome e/ou slug",
@@ -320,7 +337,33 @@ export const openApiDocument = {
           }
         }
       },
-      ModSearchItem: {
+      MetricsResponse: {
+        type: "object",
+        properties: {
+          totals: {
+            type: "object",
+            properties: {
+              routes: { type: "integer" },
+              requests: { type: "integer" },
+              errors: { type: "integer" }
+            }
+          },
+          routes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                route: { type: "string" },
+                requests: { type: "integer" },
+                errors: { type: "integer" },
+                errorRate: { type: "number" },
+                avgLatencyMs: { type: "number" },
+                maxLatencyMs: { type: "number" }
+              }
+            }
+          }
+        }
+      },      ModSearchItem: {
         type: "object",
         properties: {
           id: {
@@ -412,3 +455,6 @@ export const openApiDocument = {
     }
   }
 };
+
+
+

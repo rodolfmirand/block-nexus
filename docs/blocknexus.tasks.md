@@ -236,14 +236,14 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Expor o fluxo principal do produto via API
-- **Status:** Doing
+- **Status:** Done
 - **Objetivo:** tornar o motor de análise consumível por clientes externos
 
 ### BNX-401
 
 - **Tipo:** Task
 - **Título:** Criar contrato HTTP do endpoint `POST /analyze`
-- **Status:** Doing
+- **Status:** Done
 - **Dependência:** BNX-304
 - **Critério de aceite:** payload de entrada por mod (`selectedMods`) e resposta de selecao de versoes estao definidos e documentados
 
@@ -251,7 +251,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar validação de entrada do endpoint `POST /analyze`
-- **Status:** Doing
+- **Status:** Done
 - **Dependência:** BNX-401
 - **Critério de aceite:** requisições inválidas recebem erro consistente e previsível
 
@@ -259,7 +259,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Integrar endpoint `POST /analyze` ao motor de análise
-- **Status:** Doing
+- **Status:** Done
 - **Dependência:** BNX-401
 - **Critério de aceite:** a API executa analise ponta a ponta partindo de mods (nao modVersionIds) com resultado serializavel
 
@@ -275,7 +275,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar busca de versoes candidatas por mod e ambiente
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-303
 - **Critério de aceite:** para cada mod selecionado, o sistema lista versoes candidatas filtrando por `loader` e `minecraftVersion`
 
@@ -283,7 +283,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Implementar selecao de conjunto compativel entre mods selecionados
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-405
 - **Critério de aceite:** o motor encontra combinacao viavel entre mods selecionados ou retorna incompatibilidade explicita
 
@@ -291,7 +291,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Expor endpoint para analise por mod (`selectedMods`)
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-406
 - **Critério de aceite:** endpoint aceita lista de mods por id/slug e retorna versoes escolhidas, dependencias e problemas
 
@@ -307,7 +307,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Atualizar Swagger com exemplos do fluxo de lista de mods
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-407
 - **Critério de aceite:** `/docs` mostra exemplos completos de selecao por mod e resposta com versoes resolvidas
 
@@ -319,14 +319,14 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Dar previsibilidade técnica ao MVP
-- **Status:** Todo
+- **Status:** Done
 - **Objetivo:** garantir qualidade mínima antes da evolução do produto
 
 ### BNX-501
 
 - **Tipo:** Task
 - **Título:** Adicionar logs estruturados ao fluxo da API
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-403
 - **Critério de aceite:** cada requisição relevante registra informações úteis para diagnóstico
 
@@ -334,7 +334,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Medir latência e taxa de erro do fluxo de análise
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-403
 - **Critério de aceite:** o projeto registra pelo menos latência total e falhas por rota
 
@@ -342,7 +342,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Criar testes para casos principais de análise
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-403
 - **Critério de aceite:** cenários centrais de sucesso e falha estão cobertos
 
@@ -350,7 +350,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Documentar limitações conhecidas do MVP
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-403
 - **Critério de aceite:** o projeto lista lacunas do modelo, limitações da fonte de dados e tradeoffs assumidos
 
@@ -438,10 +438,8 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-401
-- BNX-402
-- BNX-403
-- BNX-405
-- BNX-406
-- BNX-407
-- BNX-409
+- BNX-408
+- BNX-601
+- BNX-602
+
+

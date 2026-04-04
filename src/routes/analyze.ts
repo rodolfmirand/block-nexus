@@ -1,5 +1,8 @@
+import { randomUUID } from "node:crypto";
+
 import type { Hono } from "hono";
 
+import { logError, logInfo } from "../lib/logger.js";
 import { CompatibilityService } from "../modules/compatibility/engine/index.js";
 import type { SelectedMod } from "../modules/compatibility/engine/contracts.js";
 import { PostgresCompatibilityRepository } from "../modules/compatibility/infrastructure/postgres-compatibility-repository.js";
@@ -206,11 +209,13 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
 
 export function registerAnalyzeRoutes(app: Hono): void {
   app.post("/analyze", async (context) => {
+    const requestId = randomUUID();
     let body: unknown;
 
     try {
       body = await context.req.json();
     } catch {
+      logInfo("compatibility.analyze.invalid_json", { requestId });
       return context.json(
         {
           error: "Invalid JSON body."
@@ -222,6 +227,11 @@ export function registerAnalyzeRoutes(app: Hono): void {
     const validation = validateAnalyzePayload(body);
 
     if (!validation.valid) {
+      logInfo("compatibility.analyze.validation_failed", {
+        requestId,
+        detailsCount: validation.errors.length
+      });
+
       return context.json(
         {
           error: "Invalid request payload.",
@@ -231,24 +241,49 @@ export function registerAnalyzeRoutes(app: Hono): void {
       );
     }
 
+    logInfo("compatibility.analyze.started", {
+      requestId,
+      loader: validation.payload.loader,
+      minecraftVersion: validation.payload.minecraftVersion,
+      requestedMods: validation.payload.selectedMods?.length ?? 0,
+      requestedModVersionIds: validation.payload.selectedModVersionIds?.length ?? 0
+    });
+
     const compatibilityService = new CompatibilityService(new PostgresCompatibilityRepository());
 
     try {
       const result = await compatibilityService.analyze(validation.payload);
 
+      logInfo("compatibility.analyze.completed", {
+        requestId,
+        status: result.status,
+        resolvedSelections: result.resolvedSelections.length,
+        issues: result.issues.length,
+        missingDependencies: result.missingDependencies.length
+      });
+
       return context.json(result, 200);
     } catch (error: unknown) {
       const errorMessage = formatError(error);
+      const databaseUnavailable = isDatabaseUnavailable(errorMessage);
+
+      logError("compatibility.analyze.failed", {
+        requestId,
+        databaseUnavailable,
+        message: errorMessage
+      });
 
       return context.json(
         {
-          error: isDatabaseUnavailable(errorMessage)
+          error: databaseUnavailable
             ? "Database is unavailable for analysis."
             : "Compatibility analysis failed.",
           details: errorMessage
         },
-        isDatabaseUnavailable(errorMessage) ? 503 : 500
+        databaseUnavailable ? 503 : 500
       );
     }
   });
 }
+
+
