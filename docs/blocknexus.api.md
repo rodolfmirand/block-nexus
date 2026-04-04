@@ -54,7 +54,20 @@ curl "http://localhost:3000/mods/search?q=sodium&limit=10"
 
 ## 4. POST /analyze
 
-### Request
+### Request (fluxo MVP recomendado)
+
+```json
+{
+  "loader": "forge",
+  "minecraftVersion": "1.20.1",
+  "selectedMods": [
+    { "modSlug": "create" },
+    { "modSlug": "travelersbackpack" }
+  ]
+}
+```
+
+### Request (modo legado/debug)
 
 ```json
 {
@@ -68,8 +81,9 @@ curl "http://localhost:3000/mods/search?q=sodium&limit=10"
 
 - `loader`: string obrigatoria e nao vazia.
 - `minecraftVersion`: string obrigatoria e nao vazia.
-- `selectedModVersionIds`: array obrigatoria com ao menos um ID nao vazio.
-- `selectedModVersionIds`: todos os IDs devem ser numericos (`mod_versions.id`).
+- deve ser enviado ao menos um entre:
+  - `selectedMods`: array com itens contendo `modId` numerico e/ou `modSlug`
+  - `selectedModVersionIds`: array com IDs numericos de `mod_versions`
 
 ### Response 200
 
@@ -96,4 +110,4 @@ Falha interna do motor.
 
 - `POST /analyze` retorna `200` quando a analise e executada, mesmo se o resultado de negocio for `incompatible`.
 - Incompatibilidade e resultado de dominio, nao erro de infraestrutura.
-- O contrato atual usa IDs de `mod_versions` como entrada principal.
+- No fluxo MVP, as versoes sao resolvidas automaticamente a partir de `selectedMods`, `loader` e `minecraftVersion`.
