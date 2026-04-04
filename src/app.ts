@@ -9,6 +9,7 @@ import { registerDocsRoutes } from "./routes/docs.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerMetricsRoutes } from "./routes/metrics.js";
 import { registerModsRoutes } from "./routes/mods.js";
+import { registerSessionRoutes } from "./routes/sessions.js";
 
 export function createApp(): Hono {
   const app = new Hono();
@@ -17,11 +18,11 @@ export function createApp(): Hono {
     const requestId = randomUUID();
     const start = performance.now();
 
-
     await next();
 
     const latencyMs = performance.now() - start;
-    const routeKey = `${context.req.method} ${new URL(context.req.url).pathname}`;
+    const path = new URL(context.req.url).pathname;
+    const routeKey = `${context.req.method} ${path}`;
     const statusCode = context.res.status;
 
     recordRequestMetric(routeKey, latencyMs, statusCode);
@@ -29,7 +30,7 @@ export function createApp(): Hono {
     logInfo("http.request.completed", {
       requestId,
       method: context.req.method,
-      path: new URL(context.req.url).pathname,
+      path,
       statusCode,
       latencyMs: Number(latencyMs.toFixed(2))
     });
@@ -38,10 +39,9 @@ export function createApp(): Hono {
   registerHealthRoutes(app);
   registerModsRoutes(app);
   registerAnalyzeRoutes(app);
+  registerSessionRoutes(app);
   registerMetricsRoutes(app);
   registerDocsRoutes(app);
 
   return app;
 }
-
-

@@ -242,7 +242,14 @@ export const openApiDocument = {
   },
   components: {
     schemas: {
-      SelectedMod: {
+      SessionCreatedResponse: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" }
+        }
+      },      SelectedMod: {
         type: "object",
         properties: {
           modId: {
@@ -258,7 +265,7 @@ export const openApiDocument = {
       },
       AnalyzeRequest: {
         type: "object",
-        required: ["loader", "minecraftVersion"],
+        required: ["loader", "minecraftVersion", "inputMode"],
         properties: {
           loader: {
             type: "string",
@@ -455,6 +462,8 @@ export const openApiDocument = {
     }
   }
 };
+
+
 
 
 

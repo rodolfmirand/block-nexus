@@ -4,32 +4,19 @@ import type { Hono } from "hono";
 
 import { getCachedAnalysis, setCachedAnalysis } from "../lib/analysis-cache.js";
 import { logError, logInfo } from "../lib/logger.js";
-import { CompatibilityService } from "../modules/compatibility/engine/index.js";
+import {
+  appendSessionAnalysisResult,
+  createAnonymousSession,
+  getAnonymousSession,
+  saveSessionSelection
+} from "../lib/session-store.js";
+import { CompatibilityService } from "../modules/compatibility/engine/compatibility-service.js";
 import type {
   CompatibilityAnalysisInput,
   CompatibilityInputMode,
   SelectedMod
 } from "../modules/compatibility/engine/contracts.js";
 import { PostgresCompatibilityRepository } from "../modules/compatibility/infrastructure/postgres-compatibility-repository.js";
-
-type AnalyzePayload = CompatibilityAnalysisInput;
-
-type ValidationResult =
-  | {
-      valid: true;
-      payload: AnalyzePayload;
-    }
-  | {
-      valid: false;
-      errors: string[];
-    };
-
-type ErrorWithMetadata = {
-  message?: string;
-  code?: string;
-  errno?: string | number;
-  syscall?: string;
-};
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -43,61 +30,10 @@ function isInputMode(value: unknown): value is CompatibilityInputMode {
   return value === "mods" || value === "version_ids";
 }
 
-function formatError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message.length > 0 ? error.message : error.name;
-  }
-
-  if (typeof error === "string" && error.length > 0) {
-    return error;
-  }
-
-  if (error && typeof error === "object") {
-    const metadata = error as ErrorWithMetadata;
-    const parts: string[] = [];
-
-    if (typeof metadata.message === "string" && metadata.message.length > 0) {
-      parts.push(metadata.message);
-    }
-
-    if (typeof metadata.code === "string" && metadata.code.length > 0) {
-      parts.push(`code=${metadata.code}`);
-    }
-
-    if (metadata.errno !== undefined) {
-      parts.push(`errno=${String(metadata.errno)}`);
-    }
-
-    if (typeof metadata.syscall === "string" && metadata.syscall.length > 0) {
-      parts.push(`syscall=${metadata.syscall}`);
-    }
-
-    if (parts.length > 0) {
-      return parts.join(" | ");
-    }
-  }
-
-  return "Unknown analysis error.";
-}
-
-function isDatabaseUnavailable(errorMessage: string): boolean {
-  const lowered = errorMessage.toLowerCase();
-
-  return (
-    lowered.includes("econnrefused")
-    || lowered.includes("connection terminated")
-    || lowered.includes("timeout")
-    || lowered.includes("connect")
-  );
-}
-
-function validateSelectedMods(value: unknown): {
-  selectedMods: SelectedMod[];
-  errors: string[];
-} {
+function validateSelectedMods(value: unknown): { valid: true; selectedMods: SelectedMod[] } | { valid: false; errors: string[] } {
   if (!Array.isArray(value)) {
     return {
-      selectedMods: [],
+      valid: false,
       errors: ["'selectedMods' must be an array."]
     };
   }
@@ -131,9 +67,16 @@ function validateSelectedMods(value: unknown): {
     });
   });
 
+  if (errors.length > 0) {
+    return {
+      valid: false,
+      errors
+    };
+  }
+
   return {
-    selectedMods,
-    errors
+    valid: true,
+    selectedMods
   };
 }
 
@@ -190,7 +133,9 @@ function resolveInputMode(args: {
   return null;
 }
 
-function validateAnalyzePayload(body: unknown): ValidationResult {
+function validateSelectionPayload(body: unknown):
+  | { valid: true; payload: CompatibilityAnalysisInput }
+  | { valid: false; errors: string[] } {
   if (!body || typeof body !== "object") {
     return {
       valid: false,
@@ -198,26 +143,26 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
     };
   }
 
-  const payloadCandidate = body as Record<string, unknown>;
+  const candidate = body as Record<string, unknown>;
   const errors: string[] = [];
 
-  if (!isNonEmptyString(payloadCandidate.loader)) {
+  if (!isNonEmptyString(candidate.loader)) {
     errors.push("'loader' must be a non-empty string.");
   }
 
-  if (!isNonEmptyString(payloadCandidate.minecraftVersion)) {
+  if (!isNonEmptyString(candidate.minecraftVersion)) {
     errors.push("'minecraftVersion' must be a non-empty string.");
   }
 
-  if (payloadCandidate.inputMode !== undefined && !isInputMode(payloadCandidate.inputMode)) {
+  if (candidate.inputMode !== undefined && !isInputMode(candidate.inputMode)) {
     errors.push("'inputMode' must be 'mods' or 'version_ids'.");
   }
 
-  const hasVersionIds = Array.isArray(payloadCandidate.selectedModVersionIds);
-  const hasSelectedMods = Array.isArray(payloadCandidate.selectedMods);
+  const hasVersionIds = Array.isArray(candidate.selectedModVersionIds);
+  const hasSelectedMods = Array.isArray(candidate.selectedMods);
 
   const selectedModVersionIds = hasVersionIds
-    ? (payloadCandidate.selectedModVersionIds as unknown[])
+    ? (candidate.selectedModVersionIds as unknown[])
       .filter((value): value is string => isNonEmptyString(value))
       .map((value) => value.trim())
     : [];
@@ -231,18 +176,20 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
   }
 
   const selectedModsValidation = hasSelectedMods
-    ? validateSelectedMods(payloadCandidate.selectedMods)
-    : { selectedMods: [], errors: [] };
+    ? validateSelectedMods(candidate.selectedMods)
+    : { valid: true as const, selectedMods: [] };
 
-  errors.push(...selectedModsValidation.errors);
+  if (!selectedModsValidation.valid) {
+    errors.push(...selectedModsValidation.errors);
+  }
 
-  if (hasSelectedMods && selectedModsValidation.selectedMods.length === 0) {
+  if (hasSelectedMods && selectedModsValidation.valid && selectedModsValidation.selectedMods.length === 0) {
     errors.push("'selectedMods' must include at least one valid mod.");
   }
 
   const inputMode = resolveInputMode({
-    requestedMode: isInputMode(payloadCandidate.inputMode) ? payloadCandidate.inputMode : undefined,
-    hasSelectedMods: selectedModsValidation.selectedMods.length > 0,
+    requestedMode: isInputMode(candidate.inputMode) ? candidate.inputMode : undefined,
+    hasSelectedMods: selectedModsValidation.valid && selectedModsValidation.selectedMods.length > 0,
     hasVersionIds: selectedModVersionIds.length > 0,
     errors
   });
@@ -257,10 +204,10 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
   return {
     valid: true,
     payload: {
-      loader: (payloadCandidate.loader as string).trim(),
-      minecraftVersion: (payloadCandidate.minecraftVersion as string).trim(),
+      loader: String(candidate.loader).trim(),
+      minecraftVersion: String(candidate.minecraftVersion).trim(),
       inputMode,
-      ...(selectedModsValidation.selectedMods.length > 0
+      ...(selectedModsValidation.valid && selectedModsValidation.selectedMods.length > 0
         ? { selectedMods: selectedModsValidation.selectedMods }
         : {}),
       ...(selectedModVersionIds.length > 0
@@ -270,15 +217,73 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
   };
 }
 
-export function registerAnalyzeRoutes(app: Hono): void {
-  app.post("/analyze", async (context) => {
-    const requestId = randomUUID();
+function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message.length > 0 ? error.message : error.name;
+  }
+
+  return typeof error === "string" && error.length > 0 ? error : "Unknown session analysis error.";
+}
+
+function isDatabaseUnavailable(errorMessage: string): boolean {
+  const lowered = errorMessage.toLowerCase();
+
+  return (
+    lowered.includes("econnrefused")
+    || lowered.includes("connection terminated")
+    || lowered.includes("timeout")
+    || lowered.includes("connect")
+  );
+}
+
+export function registerSessionRoutes(app: Hono): void {
+  app.post("/sessions", (context) => {
+    const session = createAnonymousSession();
+
+    return context.json(
+      {
+        id: session.id,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt
+      },
+      201
+    );
+  });
+
+  app.get("/sessions/:sessionId", (context) => {
+    const sessionId = context.req.param("sessionId");
+    const session = getAnonymousSession(sessionId);
+
+    if (!session) {
+      return context.json(
+        {
+          error: "Session not found."
+        },
+        404
+      );
+    }
+
+    return context.json(session, 200);
+  });
+
+  app.put("/sessions/:sessionId/selection", async (context) => {
+    const sessionId = context.req.param("sessionId");
+    const session = getAnonymousSession(sessionId);
+
+    if (!session) {
+      return context.json(
+        {
+          error: "Session not found."
+        },
+        404
+      );
+    }
+
     let body: unknown;
 
     try {
       body = await context.req.json();
     } catch {
-      logInfo("compatibility.analyze.invalid_json", { requestId });
       return context.json(
         {
           error: "Invalid JSON body."
@@ -287,14 +292,9 @@ export function registerAnalyzeRoutes(app: Hono): void {
       );
     }
 
-    const validation = validateAnalyzePayload(body);
+    const validation = validateSelectionPayload(body);
 
     if (!validation.valid) {
-      logInfo("compatibility.analyze.validation_failed", {
-        requestId,
-        detailsCount: validation.errors.length
-      });
-
       return context.json(
         {
           error: "Invalid request payload.",
@@ -304,12 +304,48 @@ export function registerAnalyzeRoutes(app: Hono): void {
       );
     }
 
-    const cachedResult = getCachedAnalysis(validation.payload);
+    const updated = saveSessionSelection(sessionId, validation.payload);
+
+    return context.json(updated, 200);
+  });
+
+  app.post("/sessions/:sessionId/analyze", async (context) => {
+    const sessionId = context.req.param("sessionId");
+    const session = getAnonymousSession(sessionId);
+
+    if (!session) {
+      return context.json(
+        {
+          error: "Session not found."
+        },
+        404
+      );
+    }
+
+    if (!session.selection) {
+      return context.json(
+        {
+          error: "Session has no selection.",
+          details: ["Use PUT /sessions/:sessionId/selection before analyze."]
+        },
+        400
+      );
+    }
+
+    const requestId = randomUUID();
+    const cachedResult = getCachedAnalysis(session.selection);
 
     if (cachedResult) {
-      logInfo("compatibility.analyze.cache_hit", {
+      appendSessionAnalysisResult({
+        sessionId,
+        result: cachedResult,
+        cacheHit: true
+      });
+
+      logInfo("session.analyze.cache_hit", {
         requestId,
-        inputMode: validation.payload.inputMode,
+        sessionId,
+        inputMode: session.selection.inputMode,
         status: cachedResult.status
       });
 
@@ -320,39 +356,36 @@ export function registerAnalyzeRoutes(app: Hono): void {
             cache: {
               hit: true
             },
-            inputMode: validation.payload.inputMode
+            sessionId,
+            inputMode: session.selection.inputMode
           }
         },
         200
       );
     }
 
-    logInfo("compatibility.analyze.started", {
-      requestId,
-      inputMode: validation.payload.inputMode,
-      loader: validation.payload.loader,
-      minecraftVersion: validation.payload.minecraftVersion,
-      requestedMods: validation.payload.selectedMods?.length ?? 0,
-      requestedModVersionIds: validation.payload.selectedModVersionIds?.length ?? 0
-    });
-
     const compatibilityService = new CompatibilityService(new PostgresCompatibilityRepository());
 
     try {
-      const result = await compatibilityService.analyze(validation.payload);
+      const result = await compatibilityService.analyze(session.selection);
 
       setCachedAnalysis({
-        input: validation.payload,
+        input: session.selection,
         result
       });
 
-      logInfo("compatibility.analyze.completed", {
+      appendSessionAnalysisResult({
+        sessionId,
+        result,
+        cacheHit: false
+      });
+
+      logInfo("session.analyze.completed", {
         requestId,
-        inputMode: validation.payload.inputMode,
+        sessionId,
+        inputMode: session.selection.inputMode,
         status: result.status,
-        resolvedSelections: result.resolvedSelections.length,
-        issues: result.issues.length,
-        missingDependencies: result.missingDependencies.length
+        resolvedSelections: result.resolvedSelections.length
       });
 
       return context.json(
@@ -362,30 +395,30 @@ export function registerAnalyzeRoutes(app: Hono): void {
             cache: {
               hit: false
             },
-            inputMode: validation.payload.inputMode
+            sessionId,
+            inputMode: session.selection.inputMode
           }
         },
         200
       );
     } catch (error: unknown) {
       const errorMessage = formatError(error);
-      const databaseUnavailable = isDatabaseUnavailable(errorMessage);
 
-      logError("compatibility.analyze.failed", {
+      logError("session.analyze.failed", {
         requestId,
-        inputMode: validation.payload.inputMode,
-        databaseUnavailable,
+        sessionId,
+        inputMode: session.selection.inputMode,
         message: errorMessage
       });
 
       return context.json(
         {
-          error: databaseUnavailable
+          error: isDatabaseUnavailable(errorMessage)
             ? "Database is unavailable for analysis."
             : "Compatibility analysis failed.",
           details: errorMessage
         },
-        databaseUnavailable ? 503 : 500
+        isDatabaseUnavailable(errorMessage) ? 503 : 500
       );
     }
   });

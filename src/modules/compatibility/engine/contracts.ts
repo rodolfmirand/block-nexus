@@ -21,9 +21,12 @@ export type SelectedMod = {
   modSlug?: string;
 };
 
+export type CompatibilityInputMode = "mods" | "version_ids";
+
 export type CompatibilityAnalysisInput = {
   loader: LoaderCode;
   minecraftVersion: MinecraftVersionCode;
+  inputMode?: CompatibilityInputMode;
   selectedModVersionIds?: string[];
   selectedMods?: SelectedMod[];
 };
