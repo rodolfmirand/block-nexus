@@ -9,6 +9,10 @@ Este documento define o contrato HTTP inicial da API do BlockNexus para busca e 
 - `GET /health`
 - `GET /mods/search`
 - `GET /metrics`
+- `POST /sessions`
+- `GET /sessions/:sessionId`
+- `PUT /sessions/:sessionId/selection`
+- `POST /sessions/:sessionId/analyze`
 - `POST /analyze`
 
 ## 3. GET /mods/search
@@ -57,7 +61,15 @@ curl "http://localhost:3000/mods/search?q=sodium&limit=10"
 
 Retorna metricas basicas por rota (latencia media, maximo e taxa de erro) na instancia atual.
 
-## 5. POST /analyze
+## 5. Sessao anonima
+
+Fluxo minimo de sessao (com `inputMode` explicito):
+1. `POST /sessions` cria sessao anonima.
+2. `PUT /sessions/:sessionId/selection` salva loader, versao e selecao.
+3. `POST /sessions/:sessionId/analyze` executa analise usando selecao salva.
+4. `GET /sessions/:sessionId` consulta estado e ultimo resultado.
+
+## 6. POST /analyze
 
 ### Request (fluxo MVP recomendado)
 
@@ -86,7 +98,9 @@ Retorna metricas basicas por rota (latencia media, maximo e taxa de erro) na ins
 
 - `loader`: string obrigatoria e nao vazia.
 - `minecraftVersion`: string obrigatoria e nao vazia.
-- deve ser enviado ao menos um entre:
+- `inputMode` e obrigatorio: `mods` ou `version_ids`.
+- quando `inputMode = mods`: envie apenas `selectedMods`.
+- quando `inputMode = version_ids`: envie apenas `selectedModVersionIds`.
   - `selectedMods`: array com itens contendo `modId` numerico e/ou `modSlug`
   - `selectedModVersionIds`: array com IDs numericos de `mod_versions`
 
@@ -106,14 +120,26 @@ Banco indisponivel.
 
 Falha interna do motor.
 
-## 6. Swagger / OpenAPI
+## 7. Swagger / OpenAPI
 
 - UI: `/docs`
 - Documento OpenAPI JSON: `/openapi.json`
 
-## 7. Observacoes
+## 8. Observacoes
 
 - `POST /analyze` retorna `200` quando a analise e executada, mesmo se o resultado de negocio for `incompatible`.
 - Incompatibilidade e resultado de dominio, nao erro de infraestrutura.
 - No fluxo MVP, as versoes sao resolvidas automaticamente a partir de `selectedMods`, `loader` e `minecraftVersion`.
+
+
+
+
+## 9. TTL e limpeza
+
+- `ANALYSIS_CACHE_TTL_MS`: tempo de vida do cache de analise (ms).
+- `ANALYSIS_CACHE_MAX_ENTRIES`: limite maximo de entradas em cache.
+- `SESSION_TTL_MS`: tempo de vida da sessao anonima (ms).
+- `SESSION_MAX_ENTRIES`: limite maximo de sessoes em memoria.
+- `CLEANUP_INTERVAL_MS`: intervalo de limpeza periodica de sessoes/cache (ms).
+
 

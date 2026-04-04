@@ -299,7 +299,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Manter endpoint legado por `selectedModVersionIds` como modo explicito
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-407
 - **Critério de aceite:** contrato legado continua disponivel como opcao de debug/migracao sem bloquear o fluxo do MVP
 
@@ -369,7 +369,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Story
 - **Título:** Adicionar sessão anônima para persistência temporária do modpack
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-400
 - **Critério de aceite:** o usuário consegue retomar uma análise em andamento sem sistema de contas
 
@@ -377,7 +377,7 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Story
 - **Título:** Adicionar cache para resultados repetidos
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-500
 - **Critério de aceite:** consultas idênticas têm estratégia clara de reaproveitamento
 
@@ -438,8 +438,8 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 Os itens que devem receber foco imediato agora sao:
 
-- BNX-408
-- BNX-601
-- BNX-602
+- BNX-603
+- BNX-601 (hardening)
+- BNX-602 (hardening)
 
 

@@ -87,16 +87,25 @@ Saida principal:
 - testes automatizados iniciais para rota e motor
 - documentacao de limitacoes conhecidas do MVP
 
+
+### Fase 6 em andamento
+
+- sessao anonima em memoria com endpoints `/sessions`
+- persistencia temporaria da selecao do modpack por sessao
+- cache basico de analise por chave de entrada (TTL em memoria)
 ## 6. Relacao com o TCC
 
 O TCC continua como etapa posterior, baseada no produto funcional, para comparar abordagem relacional e orientada a grafos com semantica equivalente.
 
 ## 7. Proximo Passo Imediato
 
-Com as Fases 4 e 5 concluidas, o proximo passo e iniciar a **Fase 6**, com foco em:
+Com a Fase 6 iniciada, o proximo passo e consolidar essa fase com foco em:
 
-1. sessao anonima para persistencia temporaria do modpack;
-2. cache de resultados frequentes;
-3. refinamento de UX de integracao para consumidores da API.
+1. maturar persistencia de sessao (expiracao, limpeza e limites);
+2. evoluir cache (TTL configuravel e invalidacao por refresh de catalogo);
+3. refinamento de UX de integracao para consumidores da API e historico de analises por sessao.
 
 Em resumo: o MVP ja possui fluxo funcional, observabilidade basica e testes iniciais; agora a prioridade e evoluir experiencia de uso.
+
+
+
