@@ -149,6 +149,31 @@ export const openApiDocument = {
             "application/json": {
               schema: {
                 $ref: "#/components/schemas/AnalyzeRequest"
+              },
+              examples: {
+                byMods: {
+                  summary: "Fluxo MVP por lista de mods",
+                  value: {
+                    loader: "forge",
+                    minecraftVersion: "1.20.1",
+                    selectedMods: [
+                      {
+                        modSlug: "create"
+                      },
+                      {
+                        modSlug: "travelersbackpack"
+                      }
+                    ]
+                  }
+                },
+                byVersionIds: {
+                  summary: "Fluxo legado por IDs de mod_version",
+                  value: {
+                    loader: "fabric",
+                    minecraftVersion: "1.21.1",
+                    selectedModVersionIds: ["101", "103"]
+                  }
+                }
               }
             }
           }
@@ -200,9 +225,23 @@ export const openApiDocument = {
   },
   components: {
     schemas: {
+      SelectedMod: {
+        type: "object",
+        properties: {
+          modId: {
+            type: "string",
+            pattern: "^\\d+$",
+            example: "42"
+          },
+          modSlug: {
+            type: "string",
+            example: "sodium"
+          }
+        }
+      },
       AnalyzeRequest: {
         type: "object",
-        required: ["loader", "minecraftVersion", "selectedModVersionIds"],
+        required: ["loader", "minecraftVersion"],
         properties: {
           loader: {
             type: "string",
@@ -211,6 +250,13 @@ export const openApiDocument = {
           minecraftVersion: {
             type: "string",
             example: "1.21.1"
+          },
+          selectedMods: {
+            type: "array",
+            minItems: 1,
+            items: {
+              $ref: "#/components/schemas/SelectedMod"
+            }
           },
           selectedModVersionIds: {
             type: "array",
@@ -235,6 +281,12 @@ export const openApiDocument = {
           },
           minecraftVersion: {
             type: "string"
+          },
+          requestedMods: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/SelectedMod"
+            }
           },
           requestedModVersionIds: {
             type: "array",

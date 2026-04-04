@@ -66,6 +66,19 @@ class InMemoryCompatibilityRepository implements CompatibilityRepository {
     );
   }
 
+  public async listCompatibleVersionsForModSlug(args: {
+    modSlug: string;
+    loader: string;
+    minecraftVersion: string;
+  }): Promise<AnalyzableModVersion[]> {
+    return this.versions.filter(
+      (version) =>
+        version.mod.slug === args.modSlug
+        && version.loaders.includes(args.loader)
+        && version.minecraftVersions.includes(args.minecraftVersion)
+    );
+  }
+
   public async listCompatibleVersionsForExternalProjectId(): Promise<AnalyzableModVersion[]> {
     return [];
   }
@@ -141,3 +154,4 @@ void main().catch((error: unknown) => {
   console.error(message);
   process.exitCode = 1;
 });
+

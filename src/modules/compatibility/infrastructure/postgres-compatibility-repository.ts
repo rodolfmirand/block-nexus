@@ -162,6 +162,41 @@ export class PostgresCompatibilityRepository implements CompatibilityRepository 
     );
   }
 
+  public async listCompatibleVersionsForModSlug(args: {
+    modSlug: string;
+    loader: string;
+    minecraftVersion: string;
+  }): Promise<AnalyzableModVersion[]> {
+    return this.loadVersions(
+      `
+        select distinct
+          mv.id as version_id,
+          mv.mod_id,
+          m.slug,
+          m.title,
+          m.summary,
+          m.description,
+          m.client_support,
+          m.server_support,
+          mv.version_number,
+          mv.display_name,
+          mv.release_channel,
+          mv.status,
+          mv.featured,
+          mv.changelog,
+          mv.published_at
+        from mod_versions mv
+        inner join mods m on m.id = mv.mod_id
+        inner join mod_version_loaders mvl on mvl.mod_version_id = mv.id
+        inner join mod_version_minecraft_versions mvmv on mvmv.mod_version_id = mv.id
+        where m.slug = $1
+          and mvl.loader_code = $2
+          and mvmv.minecraft_version_code = $3
+      `,
+      [args.modSlug, args.loader, args.minecraftVersion]
+    );
+  }
+
   public async listCompatibleVersionsForExternalProjectId(args: {
     externalProjectId: string;
     loader: string;
@@ -366,3 +401,4 @@ export class PostgresCompatibilityRepository implements CompatibilityRepository 
     }));
   }
 }
+

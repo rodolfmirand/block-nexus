@@ -16,10 +16,16 @@ export type AnalyzableModVersion = ModVersion & {
   conflicts: ConflictRule[];
 };
 
+export type SelectedMod = {
+  modId?: string;
+  modSlug?: string;
+};
+
 export type CompatibilityAnalysisInput = {
   loader: LoaderCode;
   minecraftVersion: MinecraftVersionCode;
-  selectedModVersionIds: string[];
+  selectedModVersionIds?: string[];
+  selectedMods?: SelectedMod[];
 };
 
 export type ResolvedSelection = CompatibilitySelection & {
@@ -50,6 +56,7 @@ export type CompatibilityAnalysisResult = {
   status: "compatible" | "incompatible";
   loader: LoaderCode;
   minecraftVersion: MinecraftVersionCode;
+  requestedMods?: SelectedMod[];
   requestedModVersionIds: string[];
   resolvedSelections: ResolvedSelection[];
   resolvedDependencies: ResolvedDependency[];

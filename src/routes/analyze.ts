@@ -1,12 +1,14 @@
 import type { Hono } from "hono";
 
 import { CompatibilityService } from "../modules/compatibility/engine/index.js";
+import type { SelectedMod } from "../modules/compatibility/engine/contracts.js";
 import { PostgresCompatibilityRepository } from "../modules/compatibility/infrastructure/postgres-compatibility-repository.js";
 
 type AnalyzePayload = {
   loader: string;
   minecraftVersion: string;
-  selectedModVersionIds: string[];
+  selectedModVersionIds?: string[];
+  selectedMods?: SelectedMod[];
 };
 
 type ValidationResult =
@@ -82,6 +84,52 @@ function isDatabaseUnavailable(errorMessage: string): boolean {
   );
 }
 
+function validateSelectedMods(value: unknown): {
+  selectedMods: SelectedMod[];
+  errors: string[];
+} {
+  if (!Array.isArray(value)) {
+    return {
+      selectedMods: [],
+      errors: ["'selectedMods' must be an array."]
+    };
+  }
+
+  const errors: string[] = [];
+  const selectedMods: SelectedMod[] = [];
+
+  value.forEach((item, index) => {
+    if (!item || typeof item !== "object") {
+      errors.push(`'selectedMods[${index}]' must be an object.`);
+      return;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    const modId = isNonEmptyString(candidate.modId) ? candidate.modId.trim() : undefined;
+    const modSlug = isNonEmptyString(candidate.modSlug) ? candidate.modSlug.trim() : undefined;
+
+    if (!modId && !modSlug) {
+      errors.push(`'selectedMods[${index}]' must include 'modId' or 'modSlug'.`);
+      return;
+    }
+
+    if (modId && !isNumericId(modId)) {
+      errors.push(`'selectedMods[${index}].modId' must be numeric.`);
+      return;
+    }
+
+    selectedMods.push({
+      ...(modId ? { modId } : {}),
+      ...(modSlug ? { modSlug } : {})
+    });
+  });
+
+  return {
+    selectedMods,
+    errors
+  };
+}
+
 function validateAnalyzePayload(body: unknown): ValidationResult {
   if (!body || typeof body !== "object") {
     return {
@@ -101,15 +149,20 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
     errors.push("'minecraftVersion' must be a non-empty string.");
   }
 
-  if (!Array.isArray(payloadCandidate.selectedModVersionIds)) {
-    errors.push("'selectedModVersionIds' must be an array of IDs.");
+  const hasVersionIds = Array.isArray(payloadCandidate.selectedModVersionIds);
+  const hasSelectedMods = Array.isArray(payloadCandidate.selectedMods);
+
+  if (!hasVersionIds && !hasSelectedMods) {
+    errors.push("Provide 'selectedMods' or 'selectedModVersionIds'.");
   }
 
-  const selectedModVersionIds = Array.isArray(payloadCandidate.selectedModVersionIds)
-    ? payloadCandidate.selectedModVersionIds.filter((value): value is string => isNonEmptyString(value))
+  const selectedModVersionIds = hasVersionIds
+    ? (payloadCandidate.selectedModVersionIds as unknown[])
+      .filter((value): value is string => isNonEmptyString(value))
+      .map((value) => value.trim())
     : [];
 
-  if (selectedModVersionIds.length === 0) {
+  if (hasVersionIds && selectedModVersionIds.length === 0 && !hasSelectedMods) {
     errors.push("'selectedModVersionIds' must include at least one non-empty ID.");
   }
 
@@ -117,6 +170,16 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
 
   if (nonNumericIds.length > 0) {
     errors.push("'selectedModVersionIds' must contain numeric IDs from mod_versions.");
+  }
+
+  const selectedModsValidation = hasSelectedMods
+    ? validateSelectedMods(payloadCandidate.selectedMods)
+    : { selectedMods: [], errors: [] };
+
+  errors.push(...selectedModsValidation.errors);
+
+  if (hasSelectedMods && selectedModsValidation.selectedMods.length === 0 && !hasVersionIds) {
+    errors.push("'selectedMods' must include at least one valid mod.");
   }
 
   if (errors.length > 0) {
@@ -129,9 +192,14 @@ function validateAnalyzePayload(body: unknown): ValidationResult {
   return {
     valid: true,
     payload: {
-      loader: payloadCandidate.loader as string,
-      minecraftVersion: payloadCandidate.minecraftVersion as string,
-      selectedModVersionIds: [...new Set(selectedModVersionIds)]
+      loader: (payloadCandidate.loader as string).trim(),
+      minecraftVersion: (payloadCandidate.minecraftVersion as string).trim(),
+      ...(selectedModsValidation.selectedMods.length > 0
+        ? { selectedMods: selectedModsValidation.selectedMods }
+        : {}),
+      ...(selectedModVersionIds.length > 0
+        ? { selectedModVersionIds: [...new Set(selectedModVersionIds)] }
+        : {})
     }
   };
 }

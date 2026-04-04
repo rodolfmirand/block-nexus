@@ -10,7 +10,8 @@ import type {
   CompatibilityAnalysisResult,
   MissingDependency,
   ResolvedDependency,
-  ResolvedSelection
+  ResolvedSelection,
+  SelectedMod
 } from "./contracts.js";
 import type { CompatibilityRepository } from "./compatibility-repository.js";
 
@@ -21,6 +22,13 @@ type PendingSelection = {
   depth: number;
   path: string[];
 };
+
+type CandidateGroup = {
+  requestedMod: SelectedMod;
+  candidates: AnalyzableModVersion[];
+};
+
+const MAX_CANDIDATE_COMBINATIONS = 40;
 
 function getReleasePriority(channel: ReleaseChannel): number {
   switch (channel) {
@@ -78,13 +86,336 @@ function conflictTargetsVersion(conflict: ConflictRule, version: AnalyzableModVe
   return conflict.targetModId !== null && conflict.targetModId === version.modId;
 }
 
+function hasConflictBetween(left: AnalyzableModVersion, right: AnalyzableModVersion): boolean {
+  for (const conflict of left.conflicts) {
+    if (conflictTargetsVersion(conflict, right)) {
+      return true;
+    }
+  }
+
+  for (const conflict of right.conflicts) {
+    if (conflictTargetsVersion(conflict, left)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function resultScore(result: CompatibilityAnalysisResult): number {
+  const errorIssues = result.issues.filter((issue) => issue.severity === "error").length;
+  const warningIssues = result.issues.length - errorIssues;
+  const errorMissingDeps = result.missingDependencies.filter((dependency) => dependency.severity === "error").length;
+  const warningMissingDeps = result.missingDependencies.length - errorMissingDeps;
+
+  return (errorIssues * 100) + (errorMissingDeps * 100) + (warningIssues * 10) + warningMissingDeps;
+}
+
+function requestedModLabel(requestedMod: SelectedMod): string {
+  return requestedMod.modSlug ?? requestedMod.modId ?? "unknown-mod";
+}
+
+function selectionMatchesRequestedMod(selection: ResolvedSelection, requestedMod: SelectedMod): boolean {
+  if (requestedMod.modId && selection.modId !== requestedMod.modId) {
+    return false;
+  }
+
+  if (requestedMod.modSlug && selection.modSlug.toLowerCase() !== requestedMod.modSlug.toLowerCase()) {
+    return false;
+  }
+
+  return true;
+}
+
 export class CompatibilityService {
   public constructor(private readonly repository: CompatibilityRepository) {}
 
   public async analyze(
     input: CompatibilityAnalysisInput
   ): Promise<CompatibilityAnalysisResult> {
-    const requestedIds = [...new Set(input.selectedModVersionIds.filter(Boolean))];
+    const selectedMods = input.selectedMods?.filter((mod) => Boolean(mod.modId || mod.modSlug)) ?? [];
+
+    if (selectedMods.length > 0) {
+      return this.analyzeFromSelectedMods({
+        loader: input.loader,
+        minecraftVersion: input.minecraftVersion,
+        selectedMods
+      });
+    }
+
+    const requestedIds = [...new Set((input.selectedModVersionIds ?? []).filter(Boolean))];
+    const requestedMods = input.selectedMods?.length ? input.selectedMods : undefined;
+
+    return this.analyzeFromVersionIds({
+      loader: input.loader,
+      minecraftVersion: input.minecraftVersion,
+      requestedIds,
+      requestedMods
+    });
+  }
+
+  private async analyzeFromSelectedMods(args: {
+    loader: string;
+    minecraftVersion: string;
+    selectedMods: SelectedMod[];
+  }): Promise<CompatibilityAnalysisResult> {
+    const groups: CandidateGroup[] = [];
+    const issues: CompatibilityIssue[] = [];
+    const issueKeys = new Set<string>();
+    const seenResolvedModIds = new Set<string>();
+
+    for (const requestedMod of args.selectedMods) {
+      const candidates = await this.listCandidatesForSelectedMod({
+        requestedMod,
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion
+      });
+
+      const sortedCandidates = sortCandidateVersions(candidates);
+
+      if (sortedCandidates.length === 0) {
+        const requestedLabel = requestedModLabel(requestedMod);
+
+        this.addIssue(
+          issues,
+          issueKeys,
+          {
+            kind: "ambiguous_version",
+            severity: "error",
+            modVersionId: requestedLabel,
+            targetModVersionId: null,
+            message: `No compatible versions found for ${requestedLabel} in ${args.loader}/${args.minecraftVersion}.`
+          }
+        );
+        continue;
+      }
+
+      const firstCandidate = sortedCandidates[0];
+
+      if (!firstCandidate) {
+        continue;
+      }
+
+      const resolvedModId = firstCandidate.modId;
+
+      if (seenResolvedModIds.has(resolvedModId)) {
+        continue;
+      }
+
+      seenResolvedModIds.add(resolvedModId);
+      groups.push({
+        requestedMod,
+        candidates: sortedCandidates
+      });
+    }
+
+    if (groups.length === 0) {
+      return {
+        status: "incompatible",
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion,
+        requestedMods: args.selectedMods,
+        requestedModVersionIds: [],
+        resolvedSelections: [],
+        resolvedDependencies: [],
+        missingDependencies: [],
+        issues
+      };
+    }
+
+    const combinations = this.generateCandidateCombinations(groups, MAX_CANDIDATE_COMBINATIONS);
+
+    if (combinations.length === 0) {
+      this.addIssue(
+        issues,
+        issueKeys,
+        {
+          kind: "explicit",
+          severity: "error",
+          modVersionId: "selection",
+          targetModVersionId: null,
+          message: "No conflict-free candidate combination was found for selected mods."
+        }
+      );
+
+      return {
+        status: "incompatible",
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion,
+        requestedMods: args.selectedMods,
+        requestedModVersionIds: [],
+        resolvedSelections: [],
+        resolvedDependencies: [],
+        missingDependencies: [],
+        issues
+      };
+    }
+
+    let bestResult: CompatibilityAnalysisResult | null = null;
+
+    for (const combination of combinations) {
+      const currentResult = await this.analyzeFromVersionIds({
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion,
+        requestedIds: combination,
+        requestedMods: args.selectedMods
+      });
+
+      const finalizedResult = this.finalizeRequestedModsCoverage(currentResult, args.selectedMods, issues);
+
+      if (finalizedResult.status === "compatible") {
+        return finalizedResult;
+      }
+
+      if (!bestResult || resultScore(finalizedResult) < resultScore(bestResult)) {
+        bestResult = finalizedResult;
+      }
+    }
+
+    if (bestResult) {
+      return bestResult;
+    }
+
+    return {
+      status: "incompatible",
+      loader: args.loader,
+      minecraftVersion: args.minecraftVersion,
+      requestedMods: args.selectedMods,
+      requestedModVersionIds: [],
+      resolvedSelections: [],
+      resolvedDependencies: [],
+      missingDependencies: [],
+      issues
+    };
+  }
+
+  private generateCandidateCombinations(groups: CandidateGroup[], limit: number): string[][] {
+    const sortedGroups = [...groups].sort((left, right) => left.candidates.length - right.candidates.length);
+    const combinations: string[][] = [];
+    const selectedCandidates: AnalyzableModVersion[] = [];
+
+    const dfs = (depth: number): void => {
+      if (combinations.length >= limit) {
+        return;
+      }
+
+      if (depth === sortedGroups.length) {
+        combinations.push(selectedCandidates.map((candidate) => candidate.id));
+        return;
+      }
+
+      const group = sortedGroups[depth];
+
+      if (!group) {
+        return;
+      }
+
+      for (const candidate of group.candidates) {
+        let hasConflict = false;
+
+        for (const selected of selectedCandidates) {
+          if (hasConflictBetween(candidate, selected)) {
+            hasConflict = true;
+            break;
+          }
+        }
+
+        if (hasConflict) {
+          continue;
+        }
+
+        selectedCandidates.push(candidate);
+        dfs(depth + 1);
+        selectedCandidates.pop();
+
+        if (combinations.length >= limit) {
+          break;
+        }
+      }
+    };
+
+    dfs(0);
+
+    return combinations;
+  }
+
+  private async listCandidatesForSelectedMod(args: {
+    requestedMod: SelectedMod;
+    loader: string;
+    minecraftVersion: string;
+  }): Promise<AnalyzableModVersion[]> {
+    if (args.requestedMod.modId) {
+      return this.repository.listCompatibleVersionsForMod({
+        modId: args.requestedMod.modId,
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion
+      });
+    }
+
+    if (args.requestedMod.modSlug) {
+      return this.repository.listCompatibleVersionsForModSlug({
+        modSlug: args.requestedMod.modSlug,
+        loader: args.loader,
+        minecraftVersion: args.minecraftVersion
+      });
+    }
+
+    return [];
+  }
+
+  private finalizeRequestedModsCoverage(
+    result: CompatibilityAnalysisResult,
+    requestedMods: SelectedMod[],
+    baseIssues: CompatibilityIssue[]
+  ): CompatibilityAnalysisResult {
+    const mergedIssues = [...result.issues];
+    const issueKeys = new Set(mergedIssues.map((issue) => buildIssueKey(issue)));
+
+    for (const baseIssue of baseIssues) {
+      this.addIssue(mergedIssues, issueKeys, baseIssue);
+    }
+
+    for (const requestedMod of requestedMods) {
+      const isIncluded = result.resolvedSelections.some((selection) =>
+        selection.origin === "user" && selectionMatchesRequestedMod(selection, requestedMod)
+      );
+
+      if (!isIncluded) {
+        const label = requestedModLabel(requestedMod);
+
+        this.addIssue(
+          mergedIssues,
+          issueKeys,
+          {
+            kind: "explicit",
+            severity: "error",
+            modVersionId: label,
+            targetModVersionId: null,
+            message: `Requested mod ${label} was not included in the resolved selection.`
+          }
+        );
+      }
+    }
+
+    const status = mergedIssues.some((issue) => issue.severity === "error")
+      || result.missingDependencies.some((dependency) => dependency.severity === "error")
+      ? "incompatible"
+      : "compatible";
+
+    return {
+      ...result,
+      status,
+      issues: mergedIssues
+    };
+  }
+
+  private async analyzeFromVersionIds(args: {
+    loader: string;
+    minecraftVersion: string;
+    requestedIds: string[];
+    requestedMods: SelectedMod[] | undefined;
+  }): Promise<CompatibilityAnalysisResult> {
+    const requestedIds = [...new Set(args.requestedIds.filter(Boolean))];
     const versionCache = new Map<string, AnalyzableModVersion>();
     const pendingQueue: PendingSelection[] = requestedIds.map((modVersionId) => ({
       modVersionId,
@@ -162,7 +493,15 @@ export class CompatibilityService {
         });
       }
 
-      this.evaluateEnvironmentCompatibility(currentVersion, input, issues, issueKeys);
+      this.evaluateEnvironmentCompatibility(
+        currentVersion,
+        {
+          loader: args.loader,
+          minecraftVersion: args.minecraftVersion
+        },
+        issues,
+        issueKeys
+      );
       this.evaluateExplicitConflicts(currentVersion, resolvedByVersionId, issues, issueKeys);
 
       for (const dependency of currentVersion.dependencies) {
@@ -171,7 +510,14 @@ export class CompatibilityService {
         }
 
         const dependencySeverity = dependency.kind === "optional" ? "warning" : "error";
-        const candidate = await this.resolveDependencyCandidate(dependency, input, versionCache);
+        const candidate = await this.resolveDependencyCandidate(
+          dependency,
+          {
+            loader: args.loader,
+            minecraftVersion: args.minecraftVersion
+          },
+          versionCache
+        );
 
         if (!candidate) {
           missingDependencies.push({
@@ -244,8 +590,9 @@ export class CompatibilityService {
         || missingDependencies.some((dependency) => dependency.severity === "error")
         ? "incompatible"
         : "compatible",
-      loader: input.loader,
-      minecraftVersion: input.minecraftVersion,
+      loader: args.loader,
+      minecraftVersion: args.minecraftVersion,
+      ...(args.requestedMods ? { requestedMods: args.requestedMods } : {}),
       requestedModVersionIds: requestedIds,
       resolvedSelections,
       resolvedDependencies,
@@ -306,7 +653,10 @@ export class CompatibilityService {
 
   private evaluateEnvironmentCompatibility(
     version: AnalyzableModVersion,
-    input: CompatibilityAnalysisInput,
+    input: {
+      loader: string;
+      minecraftVersion: string;
+    },
     issues: CompatibilityIssue[],
     issueKeys: Set<string>
   ): void {
@@ -386,7 +736,10 @@ export class CompatibilityService {
 
   private async resolveDependencyCandidate(
     dependency: DependencyRule,
-    input: CompatibilityAnalysisInput,
+    input: {
+      loader: string;
+      minecraftVersion: string;
+    },
     versionCache: Map<string, AnalyzableModVersion>
   ): Promise<AnalyzableModVersion | null> {
     if (dependency.targetModVersionId) {

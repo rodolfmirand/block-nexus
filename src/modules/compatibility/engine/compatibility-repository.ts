@@ -8,6 +8,11 @@ export type CompatibilityRepository = {
     loader: LoaderCode;
     minecraftVersion: MinecraftVersionCode;
   }): Promise<AnalyzableModVersion[]>;
+  listCompatibleVersionsForModSlug(args: {
+    modSlug: string;
+    loader: LoaderCode;
+    minecraftVersion: MinecraftVersionCode;
+  }): Promise<AnalyzableModVersion[]>;
   listCompatibleVersionsForExternalProjectId(args: {
     externalProjectId: string;
     loader: LoaderCode;
