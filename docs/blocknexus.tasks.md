@@ -236,22 +236,22 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Epic
 - **Título:** Expor o fluxo principal do produto via API
-- **Status:** Todo
+- **Status:** Doing
 - **Objetivo:** tornar o motor de análise consumível por clientes externos
 
 ### BNX-401
 
 - **Tipo:** Task
 - **Título:** Criar contrato HTTP do endpoint `POST /analyze`
-- **Status:** Todo
+- **Status:** Doing
 - **Dependência:** BNX-304
-- **Critério de aceite:** payload de entrada e resposta estão definidos e documentados
+- **Critério de aceite:** payload de entrada por mod (`selectedMods`) e resposta de selecao de versoes estao definidos e documentados
 
 ### BNX-402
 
 - **Tipo:** Task
 - **Título:** Implementar validação de entrada do endpoint `POST /analyze`
-- **Status:** Todo
+- **Status:** Doing
 - **Dependência:** BNX-401
 - **Critério de aceite:** requisições inválidas recebem erro consistente e previsível
 
@@ -259,17 +259,57 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 
 - **Tipo:** Task
 - **Título:** Integrar endpoint `POST /analyze` ao motor de análise
-- **Status:** Todo
+- **Status:** Doing
 - **Dependência:** BNX-401
-- **Critério de aceite:** a API executa análise ponta a ponta com resultado serializável
+- **Critério de aceite:** a API executa analise ponta a ponta partindo de mods (nao modVersionIds) com resultado serializavel
 
 ### BNX-404
 
 - **Tipo:** Task
 - **Título:** Documentar a API inicial
-- **Status:** Todo
+- **Status:** Done
 - **Dependência:** BNX-403
 - **Critério de aceite:** o projeto possui exemplos reais de request e response para integração
+
+### BNX-405
+
+- **Tipo:** Task
+- **Título:** Implementar busca de versoes candidatas por mod e ambiente
+- **Status:** Todo
+- **Dependência:** BNX-303
+- **Critério de aceite:** para cada mod selecionado, o sistema lista versoes candidatas filtrando por `loader` e `minecraftVersion`
+
+### BNX-406
+
+- **Tipo:** Task
+- **Título:** Implementar selecao de conjunto compativel entre mods selecionados
+- **Status:** Todo
+- **Dependência:** BNX-405
+- **Critério de aceite:** o motor encontra combinacao viavel entre mods selecionados ou retorna incompatibilidade explicita
+
+### BNX-407
+
+- **Tipo:** Task
+- **Título:** Expor endpoint para analise por mod (`selectedMods`)
+- **Status:** Todo
+- **Dependência:** BNX-406
+- **Critério de aceite:** endpoint aceita lista de mods por id/slug e retorna versoes escolhidas, dependencias e problemas
+
+### BNX-408
+
+- **Tipo:** Task
+- **Título:** Manter endpoint legado por `selectedModVersionIds` como modo explicito
+- **Status:** Todo
+- **Dependência:** BNX-407
+- **Critério de aceite:** contrato legado continua disponivel como opcao de debug/migracao sem bloquear o fluxo do MVP
+
+### BNX-409
+
+- **Tipo:** Task
+- **Título:** Atualizar Swagger com exemplos do fluxo de lista de mods
+- **Status:** Todo
+- **Dependência:** BNX-407
+- **Critério de aceite:** `/docs` mostra exemplos completos de selecao por mod e resposta com versoes resolvidas
 
 ---
 
@@ -401,5 +441,7 @@ Os itens que devem receber foco imediato agora sao:
 - BNX-401
 - BNX-402
 - BNX-403
-- BNX-404
-- BNX-503
+- BNX-405
+- BNX-406
+- BNX-407
+- BNX-409

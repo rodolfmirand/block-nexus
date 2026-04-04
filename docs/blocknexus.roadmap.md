@@ -32,12 +32,22 @@ Durante o desenvolvimento, as decisões devem seguir estes princípios:
 
 O primeiro objetivo do BlockNexus é ser uma API capaz de:
 
-- receber uma lista de mods selecionados pelo usuário;
+- receber uma lista de mods selecionados pelo usuario;
 - considerar versão do Minecraft e loader;
-- resolver dependências faltantes;
+- encontrar versoes compativeis entre os mods selecionados;
+- resolver dependencias faltantes;
 - apontar conflitos conhecidos;
-- identificar incompatibilidades de versão;
+- identificar incompatibilidades de versao;
 - retornar uma análise clara e utilizável.
+
+### Fluxo minimo do MVP (alvo de produto)
+
+1. usuario define `loader` e `minecraftVersion`;
+2. usuario pesquisa mod por nome/slug;
+3. usuario adiciona mods em uma lista de selecao;
+4. API resolve quais versoes de cada mod sao compativeis com o ambiente definido;
+5. API retorna dependencias necessarias e versoes selecionadas;
+6. API retorna incompatibilidades quando nao houver conjunto viavel.
 
 ### Escopo do primeiro produto utilizável
 
@@ -215,10 +225,11 @@ Entrada esperada:
 
 - `minecraftVersion`
 - `loader`
-- lista de mods ou versões de mods
+- lista de mods (ids internos ou slugs)
 
 Saída esperada:
 
+- versoes selecionadas por mod com justificativa basica;
 - dependências faltantes;
 - dependências resolvidas;
 - conflitos encontrados;
@@ -228,6 +239,7 @@ Saída esperada:
 
 ### Entregáveis
 
+- algoritmo de selecao de versao por mod, restrito a loader e minecraftVersion;
 - serviço de resolução de dependências;
 - serviço de verificação de conflitos;
 - algoritmo de detecção de inconsistências;
@@ -270,6 +282,21 @@ Expor o motor de análise por meio de uma API simples, estável e utilizável.
 - `GET /health`
 - `GET /mods/search`
 - `GET /mods/:id`
+
+### Contrato alvo do endpoint de analise
+
+Entrada recomendada:
+
+- `minecraftVersion`
+- `loader`
+- `selectedMods` (lista por `modId` e/ou `modSlug`)
+
+Comportamento esperado:
+
+- buscar versoes candidatas de cada mod no catalogo;
+- cruzar compatibilidade entre os mods selecionados;
+- escolher um conjunto viavel de versoes quando existir;
+- retornar falha explicita quando nao existir conjunto viavel.
 
 ### Entregáveis
 
@@ -457,9 +484,9 @@ A fase termina quando a comparação entre os bancos é reproduzível, auditáve
 2. Escolha e ingestão da fonte de dados
 3. Modelo de domínio
 4. PostgreSQL e esquema inicial
-5. Motor de resolução de dependências
-6. Motor de detecção de conflitos
-7. Endpoint `POST /analyze`
+5. Motor de resolucao de dependencias
+6. Motor de selecao de versoes compativeis entre mods
+7. Endpoint `POST /analyze` orientado a selecao por mod
 8. Testes e observabilidade
 9. Sessão e persistência de uso
 10. Recomendação

@@ -1,210 +1,95 @@
 # Contexto do Projeto: BlockNexus
 
-## 1. Visão Geral
+## 1. Visao Geral
 
-**BlockNexus** é uma API voltada ao ecossistema de mods do Minecraft, com foco inicial em análise de compatibilidade para modpacks.
+**BlockNexus** e uma API para analise de compatibilidade de mods no ecossistema de Minecraft, com foco em montagem de modpacks.
 
-O objetivo do produto é receber uma seleção de mods, considerar a versão do Minecraft e o loader utilizado, e retornar uma análise estruturada com:
+A proposta do MVP e receber uma selecao de mods, considerar versao do Minecraft e loader, e retornar uma analise estruturada com:
 
-- dependências faltantes;
-- dependências resolvidas;
-- conflitos conhecidos;
-- incompatibilidades de versão;
-- avisos relevantes para montagem do modpack.
+- versoes compativeis selecionadas para cada mod;
+- dependencias necessarias e suas versoes;
+- conflitos e incompatibilidades.
 
-Nesta fase inicial, o BlockNexus deve ser tratado primeiro como **produto utilizável**. A exploração acadêmica para o TCC virá depois, apoiada sobre uma base funcional real.
+## 2. Estrategia do Projeto
 
----
+A ordem de execucao do projeto continua:
 
-## 2. Estratégia do Projeto
+1. construir produto utilizavel;
+2. evoluir para base experimental do TCC.
 
-O projeto seguirá duas etapas principais:
-
-1. **Construção do produto**
-2. **Evolução para base experimental do TCC**
-
-Isso significa que as decisões técnicas do início devem priorizar:
-
-- velocidade de execução;
-- clareza de domínio;
-- simplicidade operacional;
-- capacidade de validar o caso de uso central.
-
-Por esse motivo, o projeto não começa por autenticação, recomendação avançada, Redis ou banco de grafos. Ele começa por **dados confiáveis, modelo de domínio e análise de compatibilidade**.
-
----
+As decisoes tecnicas priorizam clareza de dominio, simplicidade operacional e velocidade de entrega.
 
 ## 3. Escopo do MVP
 
-O primeiro produto utilizável do BlockNexus deve resolver um caso central:
+Entrada principal:
 
-**analisar a compatibilidade de uma seleção de mods para um modpack específico**.
+- `minecraftVersion`
+- `loader`
+- `selectedMods` (por `modId` e/ou `modSlug`)
 
-### Entrada esperada no MVP
+Saida principal:
 
-- versão do Minecraft;
-- loader;
-- lista de mods ou versões de mods.
+- versoes selecionadas por mod
+- dependencias resolvidas
+- dependencias faltantes
+- conflitos
+- incompatibilidades por ambiente
+- status final (`compatible` ou `incompatible`)
 
-### Saída esperada no MVP
+## 4. Direcao Tecnica
 
-- dependências faltantes;
-- dependências resolvidas;
-- conflitos identificados;
-- incompatibilidades de versão;
-- resumo final da análise.
+- linguagem: TypeScript
+- runtime: Node.js
+- framework HTTP: Hono
+- persistencia baseline: PostgreSQL
+- endpoints atuais: `GET /health`, `GET /mods/search`, `POST /analyze`, `GET /docs`
 
-### Fora do escopo inicial
+## 5. Estado Atual por Fase
 
-Os itens abaixo são importantes, mas não pertencem à primeira entrega do produto:
+### Fase 0 concluida
 
-- sistema de contas;
-- autenticação avançada;
-- sessões persistentes de usuário;
-- cache distribuído;
-- recomendação sofisticada de mods;
-- comparação entre bancos para fins acadêmicos;
-- infraestrutura AWS completa desde o primeiro ciclo.
+- bootstrap do backend
+- configuracao de lint, build e typecheck
+- health check inicial
 
----
+### Fase 1 concluida
 
-## 4. Direção Técnica Inicial
+- fonte primaria definida (Modrinth)
+- contrato canonico de ingestao
+- pipeline inicial de snapshot
 
-Para a primeira versão, o projeto seguirá esta direção:
+### Fase 2 concluida
 
-- **Linguagem:** TypeScript
-- **Runtime:** Node.js
-- **Framework HTTP:** Hono
-- **Banco inicial:** PostgreSQL
-- **Objetivo da API inicial:** expor um backend simples e testável com `GET /health` e, depois, `POST /analyze`
+- modelo de dominio formalizado
+- regras de compatibilidade documentadas
+- schema relacional inicial em PostgreSQL
 
-### Motivo da escolha
+### Fase 3 concluida
 
-O PostgreSQL será usado como base inicial porque reduz a complexidade da primeira implementação, acelera a entrega do MVP e permite que o domínio amadureça antes da criação da variante em banco de grafos.
+- contrato interno do motor de analise
+- resolucao transitiva de dependencias
+- deteccao de conflitos e incompatibilidades
+- repositorio PostgreSQL para leitura do catalogo
 
-O uso de Amazon Neptune, Redis, API Gateway e Lambda continua relevante como direção futura, mas não é a prioridade da primeira fase do produto.
+### Fase 4 em andamento
 
----
+- contrato HTTP de `POST /analyze`
+- validacao de payload
+- integracao da rota com o motor
+- documentacao Swagger inicial
+- pendencia: fluxo do MVP ainda precisa ser orientado a `selectedMods` (nao apenas `selectedModVersionIds`)
 
-## 5. Eixos Técnicos Prioritários
+## 6. Relacao com o TCC
 
-As próximas decisões do projeto devem se concentrar em quatro eixos:
+O TCC continua como etapa posterior, baseada no produto funcional, para comparar abordagem relacional e orientada a grafos com semantica equivalente.
 
-### 5.1 Fonte de Dados
+## 7. Proximo Passo Imediato
 
-A fonte primária inicial do catálogo foi definida como **Modrinth**.
+Antes da Fase 5, o proximo passo e concluir a **Fase 4** no contrato correto do MVP, com foco em:
 
-O projeto já possui:
+1. buscar versoes candidatas por mod para `loader` e `minecraftVersion`;
+2. selecionar combinacao compativel entre os mods escolhidos;
+3. retornar versoes resolvidas + dependencias na resposta do `POST /analyze`;
+4. atualizar Swagger com exemplos desse fluxo.
 
-- decisão de fonte documentada;
-- contrato canônico de ingestão;
-- adapter inicial source-agnostic;
-- pipeline para geração de snapshot local do catálogo;
-- política inicial de atualização por snapshot controlado.
-
-### 5.2 Modelo de Domínio
-
-O domínio mínimo esperado para o produto agora está formalizado em torno de:
-
-- `Mod`
-- `ModVersion`
-- `ModFile`
-- `DependencyRule`
-- `ConflictRule`
-- `CompatibilitySelection`
-- `CompatibilityIssue`
-
-A unidade principal de compatibilidade é `ModVersion`.
-
-### 5.3 Motor de Análise
-
-O núcleo do produto agora possui base executável para:
-
-- resolver dependências transitivas;
-- detectar conflitos explícitos;
-- apontar incompatibilidades por loader e versão;
-- produzir um contrato interno estável de resultado;
-- ler o catálogo a partir do PostgreSQL.
-
-### 5.4 API do Produto
-
-Com o motor interno implementado, a próxima prioridade é expor o fluxo principal do produto:
-
-- `GET /health`
-- `POST /analyze`
-
-Esse fluxo tem prioridade maior do que endpoints de sessão ou persistência do usuário.
-
----
-
-## 6. Relação com o TCC
-
-O BlockNexus também servirá como base empírica para um TCC em Sistemas de Informação.
-
-O uso acadêmico previsto é uma **comparação entre abordagem relacional e abordagem orientada a grafos** para operações centrais do domínio, principalmente:
-
-- resolução de dependências profundas;
-- detecção de conflitos;
-- consultas com filtros por versão e loader.
-
-### Importante
-
-O TCC não deve dirigir as primeiras decisões do produto.
-
-A ordem correta é:
-
-1. construir o produto;
-2. estabilizar o domínio e a regra de negócio;
-3. instrumentar e formalizar o experimento;
-4. implementar a variante em banco de grafos para comparação.
-
----
-
-## 7. Estado Atual do Repositório
-
-Neste momento, o repositório possui base funcional para ingestão, modelagem de domínio e motor de compatibilidade.
-
-O que foi estruturado na Fase 0:
-
-- `package.json`;
-- estrutura inicial do backend;
-- configuração de TypeScript;
-- configuração de lint e formatação;
-- `README.md` operacional;
-- endpoint `GET /health`.
-
-O que foi estruturado na Fase 1:
-
-- decisão de fonte primária de dados;
-- contrato canônico de ingestão;
-- adapter inicial do Modrinth;
-- pipeline inicial para gerar snapshot local do catálogo;
-- estratégia documentada de atualização do catálogo.
-
-O que foi estruturado na Fase 2:
-
-- modelo de domínio do produto;
-- regras de dependências, conflitos e incompatibilidades;
-- esquema relacional inicial em PostgreSQL.
-
-O que foi estruturado na Fase 3:
-
-- contrato interno de análise;
-- serviço de resolução transitiva;
-- detecção de conflitos e incompatibilidades;
-- implementação PostgreSQL do repositório do motor.
-
----
-
-## 8. Próximo Passo Imediato
-
-Com a base da **Fase 3** concluída, o próximo passo de desenvolvimento é iniciar a **Fase 4**, com foco em:
-
-1. criar o contrato HTTP do `POST /analyze`;
-2. validar payload de entrada;
-3. integrar o endpoint ao motor de análise;
-4. documentar requests e responses do MVP.
-
-Em resumo:
-
-**o BlockNexus já tem ingestão, domínio, schema relacional e motor interno de compatibilidade; a prioridade agora é expor esse núcleo como API utilizável**.
+Em resumo: a infraestrutura base esta pronta; agora a prioridade e fechar o fluxo funcional minimo do produto.

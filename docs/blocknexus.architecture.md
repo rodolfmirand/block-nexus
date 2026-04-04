@@ -23,15 +23,13 @@ O projeto nao foi estruturado desde o inicio como uma plataforma AWS completa. A
 
 - runtime local: Node.js
 - framework HTTP: Hono
-- persistencia atual do catalogo: snapshots JSON normalizados
-- persistencia relacional planejada: PostgreSQL
-- prioridade funcional atual: modelagem do dominio e base para o motor de analise
+- persistencia atual do catalogo: PostgreSQL (com ingestao via snapshots JSON)
+- prioridade funcional atual: fechamento do fluxo MVP por selecao de mods
 
 ### Direcao futura
 
-- implementacao do motor de compatibilidade
-- exposicao do endpoint `POST /analyze`
-- uso de PostgreSQL como baseline do produto
+- consolidacao do endpoint `POST /analyze` para entrada por mod (`selectedMods`)
+- selecao automatica de versoes compativeis por loader e versao do Minecraft
 - eventual variante em banco de grafos para o TCC
 - componentes de cache e sessao apenas depois do nucleo funcional
 
@@ -127,7 +125,7 @@ As proximas implementacoes devem seguir estes principios:
 
 ### Fase 4
 
-- criacao do endpoint `POST /analyze`
+- consolidacao do endpoint `POST /analyze` no fluxo MVP por mod
 
 ---
 
