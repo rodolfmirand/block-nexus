@@ -6,6 +6,8 @@ import type {
   ModrinthGameVersionTag,
   ModrinthLoaderTag,
   ModrinthProject,
+  ModrinthSearchHit,
+  ModrinthSearchResponse,
   ModrinthVersion
 } from "./modrinth-types.js";
 
@@ -36,6 +38,17 @@ export class ModrinthClient implements CatalogSourceAdapter {
     );
 
     return mapModrinthProjectRecord(project, versions);
+  }
+
+  public async searchTopDownloadedMods(args: {
+    limit: number;
+    offset: number;
+  }): Promise<ModrinthSearchHit[]> {
+    const facets = encodeURIComponent(JSON.stringify([["project_type:mod"]]));
+    const query = `/search?index=downloads&query=&facets=${facets}&limit=${args.limit}&offset=${args.offset}`;
+    const response = await this.getJson<ModrinthSearchResponse>(query);
+
+    return response.hits.filter((hit) => hit.project_type === "mod");
   }
 
   private async getJson<T>(path: string): Promise<T> {

@@ -64,3 +64,18 @@ export type ModrinthGameVersionTag = {
   date: string;
   major: boolean;
 };
+
+export type ModrinthSearchHit = {
+  project_id: string;
+  slug: string;
+  title: string;
+  project_type: string;
+  downloads: number;
+};
+
+export type ModrinthSearchResponse = {
+  hits: ModrinthSearchHit[];
+  offset: number;
+  limit: number;
+  total_hits: number;
+};
