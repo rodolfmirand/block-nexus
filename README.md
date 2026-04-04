@@ -6,7 +6,7 @@ BlockNexus e uma API para analise de compatibilidade de mods e montagem de modpa
 
 O repositorio ja possui:
 
-- endpoint `GET /health`, `GET /mods/search`, `GET /metrics`, `POST /analyze`;
+- endpoint `GET /health`, `GET /mods/search`, `GET /metrics`, `POST /analyze`, `POST /recommendations`;
 - endpoints de sessao anonima: `POST /sessions`, `GET /sessions/:sessionId`, `PUT /sessions/:sessionId/selection`, `POST /sessions/:sessionId/analyze`;
 - Swagger em `/docs`;
 - ingestao/importacao de catalogo para PostgreSQL;
@@ -80,6 +80,7 @@ curl http://localhost:3000/health
 curl http://localhost:3000/metrics
 curl "http://localhost:3000/mods/search?q=sodium&limit=10"
 curl -X POST http://localhost:3000/sessions
+curl -X POST http://localhost:3000/recommendations -H "content-type: application/json" -d "{\"loader\":\"forge\",\"minecraftVersion\":\"1.21.1\",\"selectedMods\":[{\"modSlug\":\"create\"}],\"limit\":5}"
 ```
 
 ## Swagger
@@ -109,5 +110,6 @@ curl -X POST http://localhost:3000/sessions
 - `SESSION_TTL_MS` (default: `3600000`)
 - `SESSION_MAX_ENTRIES` (default: `1000`)
 - `CLEANUP_INTERVAL_MS` (default: `60000`)
+
 
 
