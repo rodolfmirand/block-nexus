@@ -13,6 +13,7 @@ O repositorio ja possui:
 - motor de compatibilidade com selecao por `selectedMods`;
 - cache basico de analise em memoria;
 - logs estruturados e metricas basicas por rota.
+- frontend FE-0 (React + TypeScript + Vite) com layout base Tech Minimal.
 
 ## Stack inicial
 
@@ -38,6 +39,10 @@ O repositorio ja possui:
 - `npm run test`: testes automatizados
 - `npm run lint`: lint
 - `npm run format`: formatacao
+- `npm run frontend:install`: instala dependencias do frontend
+- `npm run frontend:dev`: sobe frontend local em modo desenvolvimento
+- `npm run frontend:build`: build de producao do frontend
+- `npm run frontend:preview`: preview do build do frontend
 
 ## Como executar
 
@@ -73,6 +78,14 @@ npm run catalog:import:snapshot
 npm run dev
 ```
 
+6. (Opcional) Suba frontend:
+
+```bash
+npm run frontend:install
+Copy-Item frontend/.env.example frontend/.env
+npm run frontend:dev
+```
+
 6. Testes rapidos:
 
 ```bash
@@ -87,6 +100,7 @@ curl -X POST http://localhost:3000/recommendations -H "content-type: application
 
 - UI: `http://localhost:3000/docs`
 - OpenAPI JSON: `http://localhost:3000/openapi.json`
+- Frontend local (Vite): `http://localhost:5173`
 
 ## Documentacao
 
@@ -102,6 +116,9 @@ curl -X POST http://localhost:3000/recommendations -H "content-type: application
 - [Schema relacional inicial](./docs/blocknexus.postgres-schema.md)
 - [API do MVP](./docs/blocknexus.api.md)
 - [Limitacoes conhecidas](./docs/blocknexus.limitations.md)
+- [Roadmap frontend](./docs/blocknexus.frontend.roadmap.md)
+- [Tarefas frontend](./docs/blocknexus.frontend.tasks.md)
+- [Design frontend](./docs/blocknexus.frontend.design.md)
 
 ## Configuracoes de expiracao
 
@@ -112,4 +129,10 @@ curl -X POST http://localhost:3000/recommendations -H "content-type: application
 - `CLEANUP_INTERVAL_MS` (default: `60000`)
 
 
+
+
+## CORS
+
+- CORS_ALLOWED_ORIGINS (default: http://localhost:5173)
+- Use lista separada por virgula para multiplas origens (ex.: http://localhost:5173,http://localhost:4173).
 

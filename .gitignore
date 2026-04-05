@@ -13,6 +13,7 @@ dist/
 build/
 out/
 .tscache/
+*.tsbuildinfo
 
 # Local Environment Variables 
 .env

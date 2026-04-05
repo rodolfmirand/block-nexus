@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
+import { config } from "./lib/config.js";
 import { logInfo } from "./lib/logger.js";
 import { recordRequestMetric } from "./lib/metrics.js";
 import { registerAnalyzeRoutes } from "./routes/analyze.js";
@@ -14,6 +16,15 @@ import { registerSessionRoutes } from "./routes/sessions.js";
 
 export function createApp(): Hono {
   const app = new Hono();
+
+  app.use(
+    "*",
+    cors({
+      origin: config.corsAllowedOrigins,
+      allowMethods: ["GET", "POST", "PUT", "OPTIONS"],
+      allowHeaders: ["content-type", "authorization"]
+    })
+  );
 
   app.use("*", async (context, next) => {
     const requestId = randomUUID();
