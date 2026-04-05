@@ -25,6 +25,7 @@ Durante o desenvolvimento, as decisões devem seguir estes princípios:
 - **SQL antes de grafo**: usar PostgreSQL na primeira versão para acelerar entrega e reduzir custo cognitivo.
 - **Medição desde cedo**: mesmo antes do TCC, estruturar logs, métricas e dados que depois possam apoiar a pesquisa.
 - **Fonte de dados é prioridade**: sem dados confiáveis sobre mods, não existe produto utilizável nem experimento válido.
+- **Credito antes de custo proprio**: uso de AWS limitado ao credito promocional (US$100), sem investimento financeiro pessoal.
 
 ---
 
@@ -492,6 +493,7 @@ A fase termina quando a comparação entre os bancos é reproduzível, auditáve
 10. Recomendação
 11. Base experimental do TCC
 12. Variante em banco de grafos
+13. Deploy controlado na AWS para estudo e validação operacional
 
 ### O que não fazer cedo demais
 
@@ -553,6 +555,15 @@ Saída mínima:
 - queries centrais definidas;
 - benchmark desenhado e instrumentado.
 
+### Marco 7. Trilha AWS sob crédito concluída
+
+Saída mínima:
+
+- aplicação publicada na AWS em ambiente de estudo;
+- controle de custos e desligamento automático configurados;
+- experimento com Neptune executado em janela controlada;
+- consumo total dentro do teto de US$100.
+
 ---
 
 ## 8. Backlog Inicial Recomendado
@@ -608,6 +619,7 @@ Os maiores riscos hoje são:
 - **regra ambígua**: falta de definição clara do que é compatibilidade;
 - **dependência de banco inadequada cedo demais**: começar pelo banco de grafos sem necessidade de produto;
 - **desvio acadêmico precoce**: moldar o produto ao experimento antes de validar valor de uso.
+- **estouro de credito AWS**: consumir o credito promocional e gerar custo real.
 
 ### Estratégia de mitigação
 
@@ -616,6 +628,36 @@ Os maiores riscos hoje são:
 - manter o primeiro banco simples;
 - documentar regras de domínio;
 - separar backlog de produto e backlog do TCC.
+- adotar guardrails de custo e teardown automatico para qualquer recurso AWS.
+
+---
+
+## 11. Trilha AWS com Orçamento Limitado
+
+Restrição obrigatória do projeto:
+
+- orçamento total AWS limitado a **US$100 em créditos**;
+- **não** haverá aporte de dinheiro próprio.
+
+Distribuição recomendada do crédito:
+
+- **US$40**: deploy e operação básica da API para estudos de infraestrutura;
+- **US$40**: spike controlado com Neptune para o TCC;
+- **US$20**: margem de segurança para variação de consumo.
+
+Guardrails obrigatórios:
+
+- tagging de custo por ambiente e experimento;
+- orçamento com alertas (50%, 80%, 95%);
+- desligamento automático de ambientes de estudo fora de janela;
+- uso de ambientes efêmeros para testes de benchmark.
+
+Estratégia de adoção do Neptune:
+
+1. manter PostgreSQL como baseline do produto;
+2. preparar equivalência semântica das queries (fase experimental);
+3. provisionar Neptune apenas para janelas curtas de teste;
+4. destruir ambiente após coleta de métricas.
 
 ---
 

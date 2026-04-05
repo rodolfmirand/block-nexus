@@ -19,6 +19,11 @@ A ordem de execucao do projeto continua:
 
 As decisoes tecnicas priorizam clareza de dominio, simplicidade operacional e velocidade de entrega.
 
+Restricao de custo:
+
+- uso de AWS limitado ao credito promocional de **US$100**;
+- sem investimento de dinheiro proprio.
+
 ## 3. Escopo do MVP
 
 Entrada principal:
@@ -99,13 +104,21 @@ Saida principal:
 
 O TCC continua como etapa posterior, baseada no produto funcional, para comparar abordagem relacional e orientada a grafos com semantica equivalente.
 
+A adocao de Neptune sera feita apenas na etapa experimental, mantendo PostgreSQL como baseline do produto.
+
 ## 7. Proximo Passo Imediato
 
 Com a Fase 6 concluida, o proximo passo e iniciar a Fase 7 (base experimental do TCC) com foco em:
 
 1. formalizar operacoes equivalentes de benchmark (BNX-701);
 2. definir dataset experimental e criterio de amostragem (BNX-702);
-3. abrir spike tecnico para variante em banco de grafos (BNX-703).
+3. configurar governanca de custo AWS para estudo sem gasto proprio (BNX-801).
+
+Sequencia planejada para grafo/AWS:
+
+1. equivalencia semantica e benchmark primeiro;
+2. deploy AWS de estudo com ambiente economico e teardown automatico;
+3. spike de Neptune em janela curta e controlada por budget.
 
 Em resumo: o produto ja cobre fluxo MVP, sessao, cache, observabilidade e recomendacao inicial; agora a prioridade e preparar metodologia experimental reproduzivel.
 

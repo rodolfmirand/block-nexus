@@ -432,6 +432,57 @@ Este documento transforma o roadmap do projeto em um backlog técnico executáve
 - **Dependência:** BNX-703
 - **Critério de aceite:** benchmarks podem ser executados de forma repetível com coleta de métricas
 
+### BNX-705
+
+- **Tipo:** Task
+- **Título:** Definir critérios de equivalência semântica SQL x grafo
+- **Status:** Todo
+- **Dependência:** BNX-701
+- **Critério de aceite:** existe checklist objetivo para validar que respostas SQL e grafo são equivalentes
+
+---
+
+## Epic 8. Trilha AWS com Crédito Promocional
+
+### BNX-800
+
+- **Tipo:** Epic
+- **Título:** Publicar e estudar BlockNexus na AWS sem custo próprio
+- **Status:** Todo
+- **Objetivo:** usar a aplicação como base de estudo AWS respeitando teto de US$100 em créditos
+
+### BNX-801
+
+- **Tipo:** Task
+- **Título:** Configurar governança de custo AWS (budget, alertas e tags)
+- **Status:** Todo
+- **Dependência:** BNX-600
+- **Critério de aceite:** alertas de 50%, 80% e 95% configurados e recursos com tag de custo padronizada
+
+### BNX-802
+
+- **Tipo:** Task
+- **Título:** Definir arquitetura de deploy de estudo com menor custo operacional
+- **Status:** Todo
+- **Dependência:** BNX-801
+- **Critério de aceite:** documento técnico define topologia mínima e estimativa de custo mensal dentro do crédito
+
+### BNX-803
+
+- **Tipo:** Task
+- **Título:** Implementar deploy AWS do MVP com teardown automatizado
+- **Status:** Todo
+- **Dependência:** BNX-802
+- **Critério de aceite:** API sobe na AWS e possui rotina automatizada de desligamento para ambiente de estudo
+
+### BNX-804
+
+- **Tipo:** Spike
+- **Título:** Executar spike de Neptune em janela controlada de custo
+- **Status:** Todo
+- **Dependência:** BNX-705
+- **Critério de aceite:** ambiente Neptune é provisionado, testado e destruído com relatório de custo/viabilidade
+
 ---
 
 ## Sprint Atual Recomendada
@@ -440,5 +491,5 @@ Os itens que devem receber foco imediato agora sao:
 
 - BNX-701
 - BNX-702
-- BNX-703 (Spike inicial de viabilidade)
+- BNX-801
 
